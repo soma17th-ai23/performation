@@ -1,0 +1,56 @@
+# Performation Output Contract
+
+Generated user-facing guides should use this stable shape unless the product UI explicitly changes it.
+
+## Guide Shape
+
+```json
+{
+  "input": "KSPO DOME 콘서트 준비물",
+  "input_type": "venue_with_detail_question",
+  "venue": {
+    "name": "KSPO DOME",
+    "address": "",
+    "nearest_station": "",
+    "transit_notes": []
+  },
+  "summary": [],
+  "checklist": [],
+  "transit_and_entry_tips": [],
+  "official_check_required": [],
+  "sources": [
+    {
+      "title": "",
+      "url": "",
+      "source_type": "official_confirmed",
+      "used_for": []
+    }
+  ],
+  "confidence_notes": []
+}
+```
+
+## Required User-Facing Sections
+
+- 공연장 기본 정보
+- 관람 전 핵심 요약
+- 준비물 체크리스트
+- 교통 및 입장 팁
+- 공식 확인 필요 항목
+- 참고 출처
+
+## Source Types
+
+| Label | Meaning | Examples |
+| --- | --- | --- |
+| `official_confirmed` | official or public-data source | venue site, ticket seller, public transport or public-data page |
+| `public_review_reference` | anecdotal open web source | public blog, open review, guide post |
+| `latest_official_check_required` | may change by event/date/operator | entry gate, locker operation, ID check, standing rules |
+| `uncertain` | sparse, conflicting, or low-quality evidence | one-off result, unclear source, contradiction without official anchor |
+
+## Wording Rules
+
+- Never say public-review information is official.
+- Prefer "공식 확인 필요" or "공연별 변동 가능성 있음" for event-specific operations.
+- If search fails, say public search evidence could not be used and continue with local venue data only.
+- Do not mention unsupported actions as available features.
