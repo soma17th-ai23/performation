@@ -9,7 +9,10 @@ def assign_confidence(state: GuideState) -> GuideState:
   else:
     confidence_notes = [
       "공식 또는 안정적인 공연장 기본 정보와 공연별 변동 가능성이 큰 정보를 분리했습니다.",
-      "검색 API 미설정 상태에서는 공개 후기나 최신 공지 검색 결과를 사용하지 않습니다.",
     ]
+    if state.get("llm_used"):
+      confidence_notes.append("Gemini LLM이 검색/공연장 데이터를 바탕으로 요약과 체크리스트 초안을 생성했습니다.")
+    else:
+      confidence_notes.append("LLM API 키가 없거나 호출에 실패하면 deterministic fallback 문구를 사용합니다.")
 
   return {"confidence_notes": confidence_notes}
