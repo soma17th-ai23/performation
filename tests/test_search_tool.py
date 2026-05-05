@@ -64,10 +64,9 @@ def test_tavily_provider_normalizes_results() -> None:
       },
     )
 
-  client = httpx.Client(transport=httpx.MockTransport(handler))
-  provider = TavilySearchProvider("tvly-test", client=client)
-
-  results = provider.search({"query": "KSPO DOME 입장 정보", "purpose": "entry"}, max_results=2)
+  with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+    provider = TavilySearchProvider("tvly-test", client=client)
+    results = provider.search({"query": "KSPO DOME 입장 정보", "purpose": "entry"}, max_results=2)
 
   assert results == [
     {
@@ -101,10 +100,9 @@ def test_brave_provider_normalizes_results() -> None:
       },
     )
 
-  client = httpx.Client(transport=httpx.MockTransport(handler))
-  provider = BraveSearchProvider("brave-test", client=client)
-
-  results = provider.search({"query": "YES24 Live Hall 물품보관", "purpose": "locker"}, max_results=2)
+  with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+    provider = BraveSearchProvider("brave-test", client=client)
+    results = provider.search({"query": "YES24 Live Hall 물품보관", "purpose": "locker"}, max_results=2)
 
   assert results == [
     {
@@ -114,6 +112,28 @@ def test_brave_provider_normalizes_results() -> None:
       "query": "YES24 Live Hall 물품보관",
     }
   ]
+
+
+def test_tavily_provider_handles_null_results() -> None:
+  def handler(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json={"results": None})
+
+  with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+    provider = TavilySearchProvider("tvly-test", client=client)
+    results = provider.search({"query": "KSPO DOME 공식 정보", "purpose": "official"}, max_results=2)
+
+  assert results == []
+
+
+def test_brave_provider_handles_null_web_payload() -> None:
+  def handler(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json={"web": None})
+
+  with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+    provider = BraveSearchProvider("brave-test", client=client)
+    results = provider.search({"query": "블루스퀘어 교통 정보", "purpose": "transit"}, max_results=2)
+
+  assert results == []
 
 
 def test_search_with_fallback_dedupes_urls_and_keeps_fallback_on_error() -> None:

@@ -29,10 +29,29 @@ class TavilySearchProvider:
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
   ) -> None:
     self._api_key = api_key
-    self._client = client or httpx.Client(timeout=timeout_seconds)
+    self._client = client
+    self._timeout_seconds = timeout_seconds
 
   def search(self, search_query: SearchQuery, *, max_results: int) -> list[SearchResult]:
-    response = self._client.post(
+    if self._client is not None:
+      response = self._post(self._client, search_query, max_results=max_results)
+    else:
+      with httpx.Client(timeout=self._timeout_seconds) as client:
+        response = self._post(client, search_query, max_results=max_results)
+    response.raise_for_status()
+    payload = response.json()
+    if not isinstance(payload, dict):
+      return []
+    return _normalize_tavily_results(payload, search_query, max_results=max_results)
+
+  def _post(
+    self,
+    client: httpx.Client,
+    search_query: SearchQuery,
+    *,
+    max_results: int,
+  ) -> httpx.Response:
+    return client.post(
       TAVILY_SEARCH_URL,
       headers={"Authorization": f"Bearer {self._api_key}"},
       json={
@@ -45,18 +64,6 @@ class TavilySearchProvider:
         "include_images": False,
       },
     )
-    response.raise_for_status()
-    payload = response.json()
-    return [
-      {
-        "title": _string_value(item.get("title")),
-        "url": _string_value(item.get("url")),
-        "snippet": _string_value(item.get("content")),
-        "query": search_query["query"],
-      }
-      for item in payload.get("results", [])[:max_results]
-      if item.get("title") and item.get("url")
-    ]
 
 
 class BraveSearchProvider:
@@ -68,10 +75,29 @@ class BraveSearchProvider:
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
   ) -> None:
     self._api_key = api_key
-    self._client = client or httpx.Client(timeout=timeout_seconds)
+    self._client = client
+    self._timeout_seconds = timeout_seconds
 
   def search(self, search_query: SearchQuery, *, max_results: int) -> list[SearchResult]:
-    response = self._client.get(
+    if self._client is not None:
+      response = self._get(self._client, search_query, max_results=max_results)
+    else:
+      with httpx.Client(timeout=self._timeout_seconds) as client:
+        response = self._get(client, search_query, max_results=max_results)
+    response.raise_for_status()
+    payload = response.json()
+    if not isinstance(payload, dict):
+      return []
+    return _normalize_brave_results(payload, search_query, max_results=max_results)
+
+  def _get(
+    self,
+    client: httpx.Client,
+    search_query: SearchQuery,
+    *,
+    max_results: int,
+  ) -> httpx.Response:
+    return client.get(
       BRAVE_SEARCH_URL,
       headers={
         "Accept": "application/json",
@@ -86,18 +112,6 @@ class BraveSearchProvider:
         "extra_snippets": "true",
       },
     )
-    response.raise_for_status()
-    payload = response.json()
-    return [
-      {
-        "title": _string_value(item.get("title")),
-        "url": _string_value(item.get("url")),
-        "snippet": _join_snippets(item.get("description"), item.get("extra_snippets")),
-        "query": search_query["query"],
-      }
-      for item in payload.get("web", {}).get("results", [])[:max_results]
-      if item.get("title") and item.get("url")
-    ]
 
 
 def search_with_fallback(
@@ -110,16 +124,17 @@ def search_with_fallback(
   if selected_provider is None:
     return []
 
+  max_results = _max_results_per_query(env)
   try:
     return _dedupe_results(
       result
       for search_query in search_queries
       for result in selected_provider.search(
         search_query,
-        max_results=_max_results_per_query(env),
+        max_results=max_results,
       )
     )
-  except (httpx.HTTPError, ValueError, KeyError, TypeError):
+  except (httpx.HTTPError, ValueError):
     return []
 
 
@@ -166,6 +181,51 @@ def _dedupe_results(results) -> list[SearchResult]:
       deduped.append(result)
       seen_urls.add(url)
   return deduped
+
+
+def _normalize_tavily_results(
+  payload: dict,
+  search_query: SearchQuery,
+  *,
+  max_results: int,
+) -> list[SearchResult]:
+  items = payload.get("results") or []
+  if not isinstance(items, list):
+    return []
+  return [
+    {
+      "title": _string_value(item.get("title")),
+      "url": _string_value(item.get("url")),
+      "snippet": _string_value(item.get("content")),
+      "query": search_query["query"],
+    }
+    for item in items[:max_results]
+    if isinstance(item, dict) and item.get("title") and item.get("url")
+  ]
+
+
+def _normalize_brave_results(
+  payload: dict,
+  search_query: SearchQuery,
+  *,
+  max_results: int,
+) -> list[SearchResult]:
+  web = payload.get("web") or {}
+  if not isinstance(web, dict):
+    return []
+  items = web.get("results") or []
+  if not isinstance(items, list):
+    return []
+  return [
+    {
+      "title": _string_value(item.get("title")),
+      "url": _string_value(item.get("url")),
+      "snippet": _join_snippets(item.get("description"), item.get("extra_snippets")),
+      "query": search_query["query"],
+    }
+    for item in items[:max_results]
+    if isinstance(item, dict) and item.get("title") and item.get("url")
+  ]
 
 
 def _join_snippets(description, extra_snippets) -> str:
