@@ -11,9 +11,12 @@ Use these cases for smoke testing app behavior, prompts, and harness output.
 | S5 | unknown small venue | unsupported_or_ambiguous | ask for more detail or say MVP venue support is limited |
 | S6 | search API error | provider_failure | local-data fallback and transparent missing-web-evidence note |
 | S7 | official source conflicts with public review | conflict | official source wins, public review stays reference-only |
+| S8 | frontend guide request | ui_to_api_boundary | frontend submits to backend endpoint and does not call agent directly |
+| S9 | backend guide request | api_to_agent_boundary | backend returns output contract from agent workflow |
 
 ## Minimum Demo Pass
 
 - Run at least S1, S2, S5, and S6 before demo delivery.
+- Run architecture boundary tests before demo delivery.
 - Include exact command output or screenshots in `_workspace/04_demo-qa_report.md` when app code exists.
 - For documentation-only changes, verify structure with `python3 scripts/validate_harness.py`.

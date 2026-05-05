@@ -21,6 +21,7 @@ Reasoning:
 - user request
 - `docs/project-brief.md`
 - current repository state
+- monorepo surfaces under `apps/frontend`, `apps/backend`, `packages/agent`, `packages/domain`, and `packages/venue-data`
 - any app code, fixture data, prompts, tests, and generated `_workspace/` handoffs
 - approved public search API or MCP configuration when search integration is implemented
 
@@ -41,6 +42,24 @@ Reasoning:
 | Source Researcher | design search queries, collect public results, classify source type, and dedupe evidence | `.agents/skills/performation-source-research/SKILL.md` | `_workspace/02_source-research_evidence.md` |
 | Trust Reviewer | verify confidence labels, conflict handling, and uncertainty language | `.agents/skills/performation-trust-review/SKILL.md` | `_workspace/03_trust-review_findings.md` |
 | Demo QA | test normal and failure flows across API, workflow, and UI surfaces | `.agents/skills/performation-demo-qa/SKILL.md` | `_workspace/04_demo-qa_report.md` |
+
+## Application Boundary
+
+Dependency direction:
+
+```text
+apps/frontend -> apps/backend -> packages/agent -> packages/venue-data
+                                      |
+                                      -> packages/domain
+```
+
+- `apps/frontend` owns Gradio UI and must call the backend API only.
+- `apps/frontend` must not import `performation_agent`, `performation_venue_data`, LangGraph, or search clients directly.
+- `apps/backend` owns FastAPI endpoints, request/response validation, and agent workflow invocation.
+- `packages/agent` owns input classification, search orchestration, venue-data lookup, summarization, confidence labels, and checklist generation.
+- `packages/agent` must not import FastAPI, Gradio, or frontend code.
+- `packages/domain` owns shared request/response schema and confidence labels.
+- `packages/venue-data` owns fallback venue fixtures and repository access.
 
 ## Phase Order
 
@@ -63,7 +82,7 @@ Reasoning:
 - input sources: Phase 1 and 2 handoffs, current codebase
 - actions: implement requested change or update durable docs/skills
 - output files: changed code/docs plus optional `_workspace/implementation-notes.md`
-- completion criteria: output follows the planned stack and source-confidence boundary
+- completion criteria: output follows the planned stack, application dependency boundary, and source-confidence boundary
 
 ### Phase 4: Trust Review
 
@@ -77,7 +96,7 @@ Reasoning:
 - input sources: changed application/docs, test fixtures, scenario matrix
 - actions: run structure checks, unit/integration tests when present, and MVP venue scenarios
 - output files: `_workspace/04_demo-qa_report.md`
-- completion criteria: normal flow and at least one failure flow have explicit evidence
+- completion criteria: normal flow, at least one failure flow, and frontend/backend/agent boundary checks have explicit evidence
 
 ### Phase 6: Delivery
 
@@ -123,9 +142,12 @@ Reasoning:
 ## Validation Checks
 
 - `python3 scripts/validate_harness.py`
+- `uv run --python 3.11 pytest`
 - every generated `SKILL.md` has YAML frontmatter with `name` and `description`
 - every project-specific shared skill has a Codex discovery mirror
 - every role listed here has either a reusable skill or a Claude agent card
+- frontend has no direct agent, venue-data, LangGraph, or search-provider imports
+- backend is the only application layer that invokes the agent workflow
 - normal-flow and failure-flow scenarios remain aligned with `docs/harness/performation/scenario-matrix.md`
 - commit rules remain aligned with `docs/harness/performation/git-policy.md`
 

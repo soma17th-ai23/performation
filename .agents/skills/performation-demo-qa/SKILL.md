@@ -24,8 +24,9 @@ Use this skill for validation, smoke tests, scenario testing, and demo-readiness
    - unsupported or ambiguous venue
    - search provider failure
 4. Verify API, workflow, and UI surfaces separately when the app exists.
-5. Confirm every output includes source/confidence information or a transparent fallback note.
-6. Write `_workspace/04_demo-qa_report.md` when QA evidence matters for delivery.
+5. Verify frontend/backend/agent dependency direction: frontend calls backend only, backend invokes agent, and agent has no UI/API framework dependency.
+6. Confirm every output includes source/confidence information or a transparent fallback note.
+7. Write `_workspace/04_demo-qa_report.md` when QA evidence matters for delivery.
 
 ## QA Report Shape
 
@@ -50,3 +51,5 @@ Use this skill for validation, smoke tests, scenario testing, and demo-readiness
 - unsupported venues do not pretend full support
 - official-check items are visible
 - confidence labels are present
+- frontend has no direct agent, search-provider, or venue-data imports
+- backend is the only app layer that invokes the agent workflow

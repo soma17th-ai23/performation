@@ -11,6 +11,53 @@ Performation is an Agentic Workflow demo for 공연 관람 준비 정보. A user
 - Data: file-based or in-memory venue data first, database later if needed
 - Initial venues: KSPO DOME, Blue Square, YES24 Live Hall
 
+## Monorepo Layout
+
+```text
+apps/
+  frontend/      # Gradio UI. Calls backend API only.
+  backend/       # FastAPI API. Owns agent workflow execution.
+packages/
+  agent/         # LangGraph-oriented workflow and guide generation.
+  domain/        # Shared request/response schema and confidence labels.
+  venue-data/    # MVP fallback venue data and loader.
+tests/           # Smoke tests and architecture boundary tests.
+```
+
+Application dependency direction:
+
+```text
+frontend -> backend -> agent -> venue-data/domain
+```
+
+The frontend must not import `performation_agent` or read venue fixtures directly. The backend is the only layer that invokes the agent workflow.
+
+## Local Setup
+
+```bash
+uv sync --python 3.11
+```
+
+Run tests:
+
+```bash
+uv run --python 3.11 pytest
+```
+
+Run backend:
+
+```bash
+PYTHONPATH=apps/backend/src:packages/agent/src:packages/domain/src:packages/venue-data/src uv run --python 3.11 uvicorn performation_backend.main:app --reload
+```
+
+Run frontend in another terminal:
+
+```bash
+PYTHONPATH=apps/frontend/src uv run --python 3.11 python -m performation_frontend.app
+```
+
+The frontend uses `PERFORMATION_API_URL` and defaults to `http://127.0.0.1:8000`.
+
 ## Harness Setup
 
 This repository includes a Harness-style team architecture adapted from `revfactory/harness` and installed in a Codex-friendly layout:

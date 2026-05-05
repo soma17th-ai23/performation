@@ -38,14 +38,22 @@ The agent must not:
 
 Included:
 
-- Gradio user input screen
-- FastAPI agent execution API
-- LangGraph workflow
+- Gradio user input screen that calls the backend API
+- FastAPI agent execution API that owns workflow execution
+- LangGraph workflow inside the agent package
 - input classification for concert names, venue names, and detailed questions
 - public web search through Tavily, Brave Search, or equivalent MCP/API
 - local venue basics
 - source and confidence labels
 - visit-prep checklist
+
+## Application Boundary
+
+- `frontend` owns user input and guide rendering only.
+- `frontend` calls the `backend` API and must not import `agent`, search, or venue-data packages directly.
+- `backend` owns request validation, HTTP endpoints, and `agent` workflow execution.
+- `agent` owns input classification, venue-data lookup, search integration, source classification, summary, confidence labels, and checklist generation.
+- `agent` must not depend on Gradio or FastAPI.
 
 Excluded:
 

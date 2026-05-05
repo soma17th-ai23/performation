@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+from enum import Enum
+
+from pydantic import BaseModel, Field
+
+
+class ConfidenceLabel(str, Enum):
+  OFFICIAL_CONFIRMED = "official_confirmed"
+  PUBLIC_REVIEW_REFERENCE = "public_review_reference"
+  LATEST_OFFICIAL_CHECK_REQUIRED = "latest_official_check_required"
+  UNCERTAIN = "uncertain"
+
+
+class Source(BaseModel):
+  title: str
+  url: str
+  source_type: ConfidenceLabel
+  used_for: list[str] = Field(default_factory=list)
+
+
+class VenueInfo(BaseModel):
+  name: str
+  aliases: list[str] = Field(default_factory=list)
+  address: str = ""
+  nearest_station: str = ""
+  transit_notes: list[str] = Field(default_factory=list)
+  entry_notes: list[str] = Field(default_factory=list)
+  locker_notes: list[str] = Field(default_factory=list)
+  convenience_notes: list[str] = Field(default_factory=list)
+  event_check_items: list[str] = Field(default_factory=list)
+  sources: list[Source] = Field(default_factory=list)
+
+
+class GuideRequest(BaseModel):
+  query: str = Field(min_length=1, max_length=200)
+
+
+class GuideResponse(BaseModel):
+  input: str
+  input_type: str
+  venue: VenueInfo | None = None
+  summary: list[str] = Field(default_factory=list)
+  checklist: list[str] = Field(default_factory=list)
+  transit_and_entry_tips: list[str] = Field(default_factory=list)
+  official_check_required: list[str] = Field(default_factory=list)
+  sources: list[Source] = Field(default_factory=list)
+  confidence_notes: list[str] = Field(default_factory=list)
+  fallback_used: bool = False
+
