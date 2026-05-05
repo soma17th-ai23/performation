@@ -1,3 +1,5 @@
+import importlib
+
 from performation_agent import generate_visit_guide
 from performation_agent.nodes.build_search_queries import build_search_queries
 from performation_agent.nodes.classify_sources import classify_sources
@@ -14,7 +16,6 @@ def test_workflow_has_expected_node_sequence() -> None:
     "classify_sources",
     "summarize_information",
     "assign_confidence",
-    "generate_checklist",
     "format_response",
   )
 
@@ -103,3 +104,25 @@ def test_classify_sources_marks_latest_check_items() -> None:
   classified_source = result["classified_sources"][0]
   assert source.source_type == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
   assert "최신 공식 확인" in classified_source["reason"]
+
+
+def test_summarize_information_accepts_llm_draft(monkeypatch) -> None:
+  def fake_generate_guide_draft_with_fallback(state, fallback_draft):
+    return (
+      {
+        "summary": ["AI 요약"],
+        "checklist": ["AI 체크리스트"],
+        "transit_and_entry_tips": ["AI 팁"],
+        "official_check_required": ["AI 공식 확인"],
+      },
+      True,
+    )
+
+  summarize_module = importlib.import_module("performation_agent.nodes.summarize_information")
+  monkeypatch.setattr(summarize_module, "generate_guide_draft_with_fallback", fake_generate_guide_draft_with_fallback)
+
+  result = summarize_module.summarize_information({"query": "KSPO DOME 준비물"})
+
+  assert result["summary"] == ["AI 요약"]
+  assert result["checklist"] == ["AI 체크리스트"]
+  assert result["llm_used"] is True

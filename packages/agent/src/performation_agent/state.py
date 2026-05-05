@@ -22,6 +22,13 @@ class ClassifiedSource(TypedDict):
   reason: str
 
 
+class GuideDraft(TypedDict):
+  summary: list[str]
+  checklist: list[str]
+  transit_and_entry_tips: list[str]
+  official_check_required: list[str]
+
+
 class GuideState(TypedDict, total=False):
   query: str
   normalized_query: str
@@ -39,4 +46,5 @@ class GuideState(TypedDict, total=False):
   sources: list[Source]
   confidence_notes: list[str]
   fallback_used: bool
+  llm_used: bool
   response: GuideResponse

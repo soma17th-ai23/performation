@@ -10,7 +10,6 @@ from performation_agent.nodes import (
   build_search_queries,
   classify_sources,
   format_response,
-  generate_checklist,
   load_venue_data,
   search_public_web,
   summarize_information,
@@ -27,7 +26,6 @@ NODE_SEQUENCE = (
   "classify_sources",
   "summarize_information",
   "assign_confidence",
-  "generate_checklist",
   "format_response",
 )
 
@@ -47,7 +45,6 @@ def build_workflow_graph():
   graph.add_node("classify_sources", classify_sources)
   graph.add_node("summarize_information", summarize_information)
   graph.add_node("assign_confidence", assign_confidence)
-  graph.add_node("generate_checklist", generate_checklist)
   graph.add_node("format_response", format_response)
 
   graph.set_entry_point("analyze_input")
@@ -56,4 +53,3 @@ def build_workflow_graph():
   graph.add_edge("format_response", END)
 
   return graph.compile()
-
