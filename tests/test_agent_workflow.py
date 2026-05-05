@@ -83,3 +83,23 @@ def test_classify_sources_assigns_confidence_after_search() -> None:
 
   source = result["sources"][0]
   assert source.source_type == ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+
+
+def test_classify_sources_marks_latest_check_items() -> None:
+  result = classify_sources(
+    {
+      "search_results": [
+        {
+          "title": "공연 당일 입장 시간 안내",
+          "url": "https://example.com/entry-notice",
+          "snippet": "입장 시간과 물품보관 운영 여부는 공연별 공지를 확인하세요.",
+          "query": "KSPO DOME 입장 시간 물품보관",
+        }
+      ]
+    }
+  )
+
+  source = result["sources"][0]
+  classified_source = result["classified_sources"][0]
+  assert source.source_type == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
+  assert "최신 공식 확인" in classified_source["reason"]
