@@ -26,6 +26,18 @@ REQUIRED_FILES = (
   "apps/frontend/src/performation_frontend/app.py",
   "apps/backend/src/performation_backend/main.py",
   "packages/agent/src/performation_agent/workflow.py",
+  "packages/agent/src/performation_agent/state.py",
+  "packages/agent/src/performation_agent/nodes/analyze_input.py",
+  "packages/agent/src/performation_agent/nodes/load_venue_data.py",
+  "packages/agent/src/performation_agent/nodes/build_search_queries.py",
+  "packages/agent/src/performation_agent/nodes/search_public_web.py",
+  "packages/agent/src/performation_agent/nodes/classify_sources.py",
+  "packages/agent/src/performation_agent/nodes/summarize_information.py",
+  "packages/agent/src/performation_agent/nodes/assign_confidence.py",
+  "packages/agent/src/performation_agent/nodes/generate_checklist.py",
+  "packages/agent/src/performation_agent/nodes/format_response.py",
+  "packages/agent/src/performation_agent/tools/search.py",
+  "packages/agent/src/performation_agent/prompts/input_analysis.md",
   "packages/domain/src/performation_domain/models.py",
   "packages/venue-data/src/performation_venue_data/repository.py",
   "packages/venue-data/src/performation_venue_data/data/venues.json",
@@ -86,6 +98,14 @@ def assert_not_mentions(path: Path, forbidden_terms: tuple[str, ...]) -> None:
   for term in forbidden_terms:
     if term in content:
       fail(f"{path.relative_to(ROOT)} mentions forbidden term: {term}")
+
+
+def assert_tree_not_mentions(relative: str, forbidden_terms: tuple[str, ...]) -> None:
+  root = ROOT / relative
+  if not root.exists():
+    fail(f"missing required directory: {relative}")
+  for path in root.rglob("*.py"):
+    assert_not_mentions(path, forbidden_terms)
 
 
 def main() -> int:
@@ -159,8 +179,22 @@ def main() -> int:
   assert_mentions(backend_app, ("FastAPI", "generate_visit_guide", "performation_agent"))
 
   agent_workflow = assert_file("packages/agent/src/performation_agent/workflow.py")
-  assert_mentions(agent_workflow, ("StateGraph", "match_venue", "compose_guide"))
-  assert_not_mentions(agent_workflow, ("fastapi", "gradio", "httpx"))
+  assert_mentions(
+    agent_workflow,
+    (
+      "StateGraph",
+      "analyze_input",
+      "load_venue_data",
+      "build_search_queries",
+      "search_public_web",
+      "classify_sources",
+      "summarize_information",
+      "assign_confidence",
+      "generate_checklist",
+      "format_response",
+    ),
+  )
+  assert_tree_not_mentions("packages/agent/src/performation_agent", ("fastapi", "gradio"))
 
   print("PASS: Performation harness structure is valid.")
   return 0
