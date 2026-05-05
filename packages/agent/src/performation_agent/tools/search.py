@@ -29,12 +29,12 @@ class TavilySearchProvider:
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
   ) -> None:
     self._api_key = api_key
-    self._client = client
+    self._injected_client = client
     self._timeout_seconds = timeout_seconds
 
   def search(self, search_query: SearchQuery, *, max_results: int) -> list[SearchResult]:
-    if self._client is not None:
-      response = self._post(self._client, search_query, max_results=max_results)
+    if self._injected_client is not None:
+      response = self._post(self._injected_client, search_query, max_results=max_results)
     else:
       with httpx.Client(timeout=self._timeout_seconds) as client:
         response = self._post(client, search_query, max_results=max_results)
@@ -75,12 +75,12 @@ class BraveSearchProvider:
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
   ) -> None:
     self._api_key = api_key
-    self._client = client
+    self._injected_client = client
     self._timeout_seconds = timeout_seconds
 
   def search(self, search_query: SearchQuery, *, max_results: int) -> list[SearchResult]:
-    if self._client is not None:
-      response = self._get(self._client, search_query, max_results=max_results)
+    if self._injected_client is not None:
+      response = self._get(self._injected_client, search_query, max_results=max_results)
     else:
       with httpx.Client(timeout=self._timeout_seconds) as client:
         response = self._get(client, search_query, max_results=max_results)
@@ -126,14 +126,15 @@ def search_with_fallback(
 
   max_results = _max_results_per_query(env)
   try:
-    return _dedupe_results(
-      result
-      for search_query in search_queries
-      for result in selected_provider.search(
-        search_query,
-        max_results=max_results,
+    results: list[SearchResult] = []
+    for search_query in search_queries:
+      results.extend(
+        selected_provider.search(
+          search_query,
+          max_results=max_results,
+        )
       )
-    )
+    return _dedupe_results(results)
   except (httpx.HTTPError, ValueError):
     return []
 
@@ -158,7 +159,7 @@ def build_search_provider_from_env(env: Mapping[str, str] | None = None) -> Sear
 
 def _timeout_seconds(env: Mapping[str, str]) -> float:
   try:
-    return float(env.get("PERFORMATION_SEARCH_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS))
+    return float(env.get("PERFORMATION_SEARCH_TIMEOUT_SECONDS") or str(DEFAULT_TIMEOUT_SECONDS))
   except ValueError:
     return DEFAULT_TIMEOUT_SECONDS
 
@@ -166,7 +167,7 @@ def _timeout_seconds(env: Mapping[str, str]) -> float:
 def _max_results_per_query(env: Mapping[str, str] | None) -> int:
   values = env or os.environ
   try:
-    configured = int(values.get("PERFORMATION_SEARCH_MAX_RESULTS", DEFAULT_MAX_RESULTS_PER_QUERY))
+    configured = int(values.get("PERFORMATION_SEARCH_MAX_RESULTS") or str(DEFAULT_MAX_RESULTS_PER_QUERY))
   except ValueError:
     configured = DEFAULT_MAX_RESULTS_PER_QUERY
   return min(max(configured, 1), 10)
