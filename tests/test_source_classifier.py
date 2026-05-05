@@ -56,3 +56,31 @@ def test_unknown_source_remains_uncertain() -> None:
 
   assert label == ConfidenceLabel.UNCERTAIN
   assert "불확실" in reason
+
+
+def test_query_terms_do_not_drive_source_classification() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "공연장 정보 모음",
+      "url": "https://example.com/venue",
+      "snippet": "여러 공연장의 일반 정보를 모았습니다.",
+      "query": "KSPO DOME 공식 후기",
+    }
+  )
+
+  assert label == ConfidenceLabel.UNCERTAIN
+  assert "불확실" in reason
+
+
+def test_official_notice_source_stays_official_when_no_event_specific_detail() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "KSPO DOME 공지사항",
+      "url": "https://www.ksponco.or.kr/olympicpark/notice",
+      "snippet": "올림픽공원 공식 공지사항입니다.",
+      "query": "KSPO DOME 공지",
+    }
+  )
+
+  assert label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert "공식" in reason

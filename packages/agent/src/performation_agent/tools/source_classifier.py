@@ -54,8 +54,6 @@ LATEST_CHECK_HINTS = (
   "운영 여부",
   "운영여부",
   "스탠딩",
-  "공지",
-  "변경",
 )
 
 
@@ -90,7 +88,6 @@ def _combined_text(result: SearchResult) -> str:
       result["title"],
       result["url"],
       result["snippet"],
-      result["query"],
     )
   ).casefold()
 
