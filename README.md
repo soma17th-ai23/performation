@@ -38,6 +38,7 @@ Then read:
 
 ## Source Documents
 
-- Planning PDF: `/Users/coldmans/Downloads/프로젝트 기획서 양식_23조_공연정보제공서비스.pdf`
+- Project brief: `docs/project-brief.md`
+- Original planning PDF is not committed to this repository.
 - Harness reference: `https://github.com/revfactory/harness`
 - Codex-native reference: `https://github.com/SaehwanPark/meta-harness`

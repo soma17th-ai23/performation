@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 
@@ -50,11 +49,12 @@ def assert_file(relative: str) -> Path:
 
 def assert_skill_frontmatter(relative: str) -> None:
   path = assert_file(relative)
-  content = read(path)
-  if not content.startswith("---\n"):
+  content = read(path).lstrip("\ufeff")
+  normalized = content.replace("\r\n", "\n").replace("\r", "\n")
+  if not normalized.startswith("---\n"):
     fail(f"missing YAML frontmatter: {relative}")
   try:
-    _, frontmatter, _ = content.split("---", 2)
+    _, frontmatter, _ = normalized.split("---", 2)
   except ValueError:
     fail(f"malformed YAML frontmatter: {relative}")
   if "name:" not in frontmatter:
