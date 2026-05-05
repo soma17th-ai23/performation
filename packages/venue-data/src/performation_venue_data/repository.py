@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
 
 from performation_domain import VenueInfo
@@ -30,6 +31,6 @@ class VenueRepository:
     return None
 
 
+@lru_cache(maxsize=1)
 def get_default_repository() -> VenueRepository:
   return VenueRepository.from_json()
-
