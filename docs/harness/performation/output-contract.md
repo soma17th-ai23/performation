@@ -39,6 +39,15 @@ Generated user-facing guides should use this stable shape unless the product UI 
 - 공식 확인 필요 항목
 - 참고 출처
 
+## Input Types
+
+| Value | Meaning |
+| --- | --- |
+| `venue_name` | supported MVP venue name or alias |
+| `venue_with_detail_question` | supported venue plus a detail question such as entry, standing, transit, locker, or preparation |
+| `concert_with_venue_hint` | concert-like input that includes a supported venue alias or hint |
+| `unsupported_or_ambiguous` | no supported venue can be inferred safely |
+
 ## Source Types
 
 | Label | Meaning | Examples |

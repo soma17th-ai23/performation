@@ -1,8 +1,10 @@
 import importlib
 
 from performation_agent import generate_visit_guide
+from performation_agent.nodes.analyze_input import analyze_input
 from performation_agent.nodes.build_search_queries import build_search_queries
 from performation_agent.nodes.classify_sources import classify_sources
+from performation_agent.nodes.load_venue_data import load_venue_data
 from performation_agent.workflow import NODE_SEQUENCE
 from performation_domain import ConfidenceLabel, VenueInfo
 
@@ -55,6 +57,40 @@ def test_supported_venue_examples_keep_existing_fallback_behavior() -> None:
     assert guide.checklist
 
 
+def test_concert_query_with_venue_hint_infers_supported_venue() -> None:
+  guide = generate_visit_guide("아이유 콘서트 KSPO")
+
+  assert guide.input_type == "concert_with_venue_hint"
+  assert guide.venue is not None
+  assert guide.venue.name == "KSPO DOME"
+  assert guide.fallback_used is True
+  assert guide.checklist
+
+
+def test_venue_alias_with_live_word_stays_venue_name() -> None:
+  guide = generate_visit_guide("예스24라이브홀")
+
+  assert guide.input_type == "venue_name"
+  assert guide.venue is not None
+  assert guide.venue.name == "YES24 Live Hall"
+
+
+def test_concert_query_without_venue_hint_stays_ambiguous() -> None:
+  guide = generate_visit_guide("아이유 콘서트 티켓팅")
+
+  assert guide.input_type == "unsupported_or_ambiguous"
+  assert guide.venue is None
+  assert any("공연장명" in item for item in guide.summary)
+
+
+def test_input_analysis_marks_concert_like_queries() -> None:
+  result = analyze_input({"query": "아이유 콘서트 KSPO"})
+
+  assert result["input_intent"] == "concert_or_event_name"
+  assert result["looks_like_concert"] is True
+  assert result["concert_keywords"] == ["콘서트"]
+
+
 def test_search_queries_preserve_detail_and_localized_input() -> None:
   result = build_search_queries(
     {
@@ -66,6 +102,17 @@ def test_search_queries_preserve_detail_and_localized_input() -> None:
   queries = [item["query"] for item in result["search_queries"]]
   assert all("YES24 Live Hall" in query for query in queries)
   assert all("예스24라이브홀 스탠딩" in query for query in queries)
+
+
+def test_search_queries_use_inferred_venue_and_original_concert_query() -> None:
+  analysis = analyze_input({"query": "아이유 콘서트 KSPO"})
+  venue_state = load_venue_data(analysis)
+  result = build_search_queries({**analysis, **venue_state})
+
+  queries = [item["query"] for item in result["search_queries"]]
+  assert venue_state["matched_venue_alias"] == "KSPO"
+  assert all("KSPO DOME" in query for query in queries)
+  assert all("아이유 콘서트 KSPO" in query for query in queries)
 
 
 def test_classify_sources_assigns_confidence_after_search() -> None:
