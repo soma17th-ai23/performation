@@ -161,7 +161,7 @@ KSPO DOME 콘서트 준비물 알려줘
 
 Expected:
 
-- input is classified as venue plus detailed preparation question
+- input is classified as a concert-like query with a supported venue hint
 - local venue basics are used
 - public web search is attempted if configured
 - output separates official venue/ticketing information from public blog/review tips
