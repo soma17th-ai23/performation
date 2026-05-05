@@ -10,7 +10,7 @@ def load_venue_data(state: GuideState) -> GuideState:
 
   if venue is None:
     input_type = "unsupported_or_ambiguous"
-  elif state.get("detail_keywords"):
+  elif state.get("input_intent") == "detail_question":
     input_type = "venue_with_detail_question"
   else:
     input_type = "venue_name"

@@ -13,11 +13,23 @@ QUERY_PURPOSES = (
 
 
 def build_search_queries(state: GuideState) -> GuideState:
-  venue = state.get("venue")
-  base_query = venue.name if venue else state["query"]
+  base_query = _build_base_query(state)
   queries: list[SearchQuery] = [
     {"query": f"{base_query} {query_suffix}", "purpose": purpose}
     for query_suffix, purpose in QUERY_PURPOSES
   ]
 
   return {"search_queries": queries}
+
+
+def _build_base_query(state: GuideState) -> str:
+  venue = state.get("venue")
+  original_query = state["query"]
+  if venue is None:
+    return original_query
+
+  query_parts = [venue.name]
+  if original_query.casefold() != venue.name.casefold():
+    query_parts.append(original_query)
+
+  return " ".join(query_parts)

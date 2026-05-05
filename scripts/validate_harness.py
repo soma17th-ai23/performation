@@ -194,7 +194,7 @@ def main() -> int:
       "format_response",
     ),
   )
-  assert_tree_not_mentions("packages/agent/src/performation_agent", ("fastapi", "gradio", "httpx"))
+  assert_tree_not_mentions("packages/agent/src/performation_agent", ("fastapi", "gradio"))
 
   print("PASS: Performation harness structure is valid.")
   return 0

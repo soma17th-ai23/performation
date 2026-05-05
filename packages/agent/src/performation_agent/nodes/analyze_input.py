@@ -13,5 +13,6 @@ def analyze_input(state: GuideState) -> GuideState:
   return {
     "query": query,
     "normalized_query": query.casefold(),
+    "input_intent": "detail_question" if detail_keywords else "venue_or_concert_name",
     "detail_keywords": detail_keywords,
   }

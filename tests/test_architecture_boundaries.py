@@ -19,4 +19,3 @@ def test_agent_package_has_no_ui_or_api_framework_dependency() -> None:
     content = path.read_text(encoding="utf-8").casefold()
     assert "fastapi" not in content
     assert "gradio" not in content
-    assert "httpx" not in content

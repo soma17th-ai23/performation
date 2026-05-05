@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from performation_domain import ConfidenceLabel, GuideResponse, Source, VenueInfo
+from performation_domain import GuideResponse, Source, VenueInfo
 
 
 class SearchQuery(TypedDict):
@@ -15,7 +15,6 @@ class SearchResult(TypedDict):
   url: str
   snippet: str
   query: str
-  source_type: ConfidenceLabel
 
 
 class ClassifiedSource(TypedDict):
@@ -26,6 +25,7 @@ class ClassifiedSource(TypedDict):
 class GuideState(TypedDict, total=False):
   query: str
   normalized_query: str
+  input_intent: str
   input_type: str
   detail_keywords: list[str]
   venue: VenueInfo | None
@@ -40,4 +40,3 @@ class GuideState(TypedDict, total=False):
   confidence_notes: list[str]
   fallback_used: bool
   response: GuideResponse
-
