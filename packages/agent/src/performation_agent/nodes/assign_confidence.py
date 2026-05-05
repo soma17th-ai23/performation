@@ -12,5 +12,4 @@ def assign_confidence(state: GuideState) -> GuideState:
       "검색 API 미설정 상태에서는 공개 후기나 최신 공지 검색 결과를 사용하지 않습니다.",
     ]
 
-  return {**state, "confidence_notes": confidence_notes}
-
+  return {"confidence_notes": confidence_notes}

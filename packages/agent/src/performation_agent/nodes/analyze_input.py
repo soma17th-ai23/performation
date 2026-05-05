@@ -11,10 +11,7 @@ def analyze_input(state: GuideState) -> GuideState:
   detail_keywords = [keyword for keyword in DETAIL_KEYWORDS if keyword in query]
 
   return {
-    **state,
     "query": query,
     "normalized_query": query.casefold(),
-    "input_type": "detail_question" if detail_keywords else "venue_or_concert_name",
     "detail_keywords": detail_keywords,
   }
-

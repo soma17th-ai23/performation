@@ -17,5 +17,4 @@ def format_response(state: GuideState) -> GuideState:
     confidence_notes=state.get("confidence_notes", []),
     fallback_used=state.get("fallback_used", False),
   )
-  return {**state, "response": response}
-
+  return {"response": response}

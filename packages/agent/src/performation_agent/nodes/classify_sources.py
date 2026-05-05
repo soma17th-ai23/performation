@@ -28,7 +28,6 @@ def classify_sources(state: GuideState) -> GuideState:
     )
 
   return {
-    **state,
     "classified_sources": classified_sources,
     "sources": [item["source"] for item in classified_sources],
   }

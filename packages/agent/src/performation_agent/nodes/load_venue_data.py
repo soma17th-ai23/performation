@@ -16,8 +16,6 @@ def load_venue_data(state: GuideState) -> GuideState:
     input_type = "venue_name"
 
   return {
-    **state,
     "venue": venue,
     "input_type": input_type,
   }
-

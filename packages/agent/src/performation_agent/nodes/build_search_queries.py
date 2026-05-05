@@ -20,12 +20,4 @@ def build_search_queries(state: GuideState) -> GuideState:
     for query_suffix, purpose in QUERY_PURPOSES
   ]
 
-  deduped: list[SearchQuery] = []
-  seen: set[str] = set()
-  for item in queries:
-    if item["query"] not in seen:
-      deduped.append(item)
-      seen.add(item["query"])
-
-  return {**state, "search_queries": deduped}
-
+  return {"search_queries": queries}

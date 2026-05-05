@@ -20,5 +20,4 @@ def generate_checklist(state: GuideState) -> GuideState:
   else:
     checklist = DEFAULT_CHECKLIST
 
-  return {**state, "checklist": checklist}
-
+  return {"checklist": checklist}
