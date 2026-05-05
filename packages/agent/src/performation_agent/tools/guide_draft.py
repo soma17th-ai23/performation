@@ -31,7 +31,7 @@ def build_deterministic_guide_draft(state: GuideState) -> GuideDraft:
   search_summary = (
     "공개 웹 검색 결과와 로컬 공연장 데이터를 함께 참고했습니다."
     if state.get("search_results")
-    else "검색 결과가 없거나 검색 provider가 꺼져 있어 로컬 공연장 데이터 기반으로 안내합니다."
+    else "확인 가능한 공개 웹 검색 결과가 없어 로컬 공연장 데이터 기반으로 안내합니다."
   )
   return {
     "summary": [

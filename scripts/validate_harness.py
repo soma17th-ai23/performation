@@ -34,7 +34,6 @@ REQUIRED_FILES = (
   "packages/agent/src/performation_agent/nodes/classify_sources.py",
   "packages/agent/src/performation_agent/nodes/summarize_information.py",
   "packages/agent/src/performation_agent/nodes/assign_confidence.py",
-  "packages/agent/src/performation_agent/nodes/generate_checklist.py",
   "packages/agent/src/performation_agent/nodes/format_response.py",
   "packages/agent/src/performation_agent/tools/search.py",
   "packages/agent/src/performation_agent/prompts/input_analysis.md",
@@ -190,7 +189,6 @@ def main() -> int:
       "classify_sources",
       "summarize_information",
       "assign_confidence",
-      "generate_checklist",
       "format_response",
     ),
   )

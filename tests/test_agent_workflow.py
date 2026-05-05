@@ -16,7 +16,6 @@ def test_workflow_has_expected_node_sequence() -> None:
     "classify_sources",
     "summarize_information",
     "assign_confidence",
-    "generate_checklist",
     "format_response",
   )
 

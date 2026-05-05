@@ -11,6 +11,7 @@ from performation_agent.tools.llm import (
   build_guide_prompt,
   generate_guide_draft_with_fallback,
 )
+from performation_domain import VenueInfo
 
 
 FALLBACK_DRAFT = {
@@ -24,7 +25,7 @@ FALLBACK_DRAFT = {
 def test_build_guide_draft_provider_requires_gemini_key(monkeypatch) -> None:
   monkeypatch.delenv("GEMINI_API_KEY", raising=False)
 
-  assert build_guide_draft_provider_from_env({}) is None
+  assert build_guide_draft_provider_from_env() is None
 
 
 def test_build_guide_draft_provider_uses_gemini_env() -> None:
@@ -140,6 +141,13 @@ def test_deterministic_draft_reflects_search_availability() -> None:
   draft = build_deterministic_guide_draft(
     {
       "query": "KSPO DOME 준비물",
+      "venue": VenueInfo(
+        name="KSPO DOME",
+        transit_notes=["5호선 올림픽공원역 이용"],
+        entry_notes=["공연별 입장 위치 확인"],
+        locker_notes=["물품보관 운영 여부 확인"],
+        event_check_items=["공연별 입장 시간 확인"],
+      ),
       "search_results": [
         {
           "title": "검색 결과",
@@ -151,4 +159,16 @@ def test_deterministic_draft_reflects_search_availability() -> None:
     }
   )
 
-  assert "MVP" in draft["summary"][0]
+  assert "공개 웹 검색 결과" in draft["summary"][1]
+
+
+def test_deterministic_draft_uses_neutral_message_without_search_results() -> None:
+  draft = build_deterministic_guide_draft(
+    {
+      "query": "KSPO DOME 준비물",
+      "venue": VenueInfo(name="KSPO DOME"),
+      "search_results": [],
+    }
+  )
+
+  assert "확인 가능한 공개 웹 검색 결과가 없어" in draft["summary"][1]

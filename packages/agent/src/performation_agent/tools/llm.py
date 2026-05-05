@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Mapping
+from functools import lru_cache
 from typing import Protocol
 
 import httpx
@@ -91,7 +92,12 @@ def generate_guide_draft_with_fallback(
   provider: GuideDraftProvider | None = None,
   env: Mapping[str, str] | None = None,
 ) -> tuple[GuideDraft, bool]:
-  selected_provider = provider or build_guide_draft_provider_from_env(env)
+  if provider is not None:
+    selected_provider = provider
+  elif env is None:
+    selected_provider = _cached_provider_from_env()
+  else:
+    selected_provider = build_guide_draft_provider_from_env(env)
   if selected_provider is None:
     return fallback_draft, False
 
@@ -113,6 +119,11 @@ def build_guide_draft_provider_from_env(env: Mapping[str, str] | None = None) ->
     model=values.get("PERFORMATION_LLM_MODEL") or DEFAULT_GEMINI_MODEL,
     timeout_seconds=_timeout_seconds(values),
   )
+
+
+@lru_cache(maxsize=1)
+def _cached_provider_from_env() -> GuideDraftProvider | None:
+  return build_guide_draft_provider_from_env()
 
 
 def build_guide_prompt(state: GuideState, fallback_draft: GuideDraft) -> str:
