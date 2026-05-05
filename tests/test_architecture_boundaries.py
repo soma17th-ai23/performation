@@ -1,0 +1,23 @@
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_frontend_calls_backend_without_agent_imports() -> None:
+  frontend_app = ROOT / "apps" / "frontend" / "src" / "performation_frontend" / "app.py"
+  content = frontend_app.read_text(encoding="utf-8")
+
+  assert "httpx.post" in content
+  assert "performation_agent" not in content
+  assert "performation_venue_data" not in content
+
+
+def test_agent_package_has_no_ui_or_api_framework_dependency() -> None:
+  agent_workflow = ROOT / "packages" / "agent" / "src" / "performation_agent" / "workflow.py"
+  content = agent_workflow.read_text(encoding="utf-8")
+
+  assert "fastapi" not in content.casefold()
+  assert "gradio" not in content.casefold()
+  assert "httpx" not in content.casefold()
+

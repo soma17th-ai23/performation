@@ -16,11 +16,22 @@ PROJECT_SKILLS = (
 REQUIRED_FILES = (
   "AGENTS.md",
   "README.md",
+  "pyproject.toml",
+  ".env.example",
   "docs/project-brief.md",
   "docs/harness/performation/team-spec.md",
   "docs/harness/performation/output-contract.md",
   "docs/harness/performation/scenario-matrix.md",
   "docs/harness/performation/git-policy.md",
+  "apps/frontend/src/performation_frontend/app.py",
+  "apps/backend/src/performation_backend/main.py",
+  "packages/agent/src/performation_agent/workflow.py",
+  "packages/domain/src/performation_domain/models.py",
+  "packages/venue-data/src/performation_venue_data/repository.py",
+  "packages/venue-data/src/performation_venue_data/data/venues.json",
+  "tests/test_architecture_boundaries.py",
+  "tests/test_backend_api.py",
+  "tests/test_agent_workflow.py",
   ".agents/skills/harness/SKILL.md",
   ".codex/skills/harness/SKILL.md",
   ".claude/agents/performation-supervisor.md",
@@ -70,6 +81,13 @@ def assert_mentions(path: Path, required_terms: tuple[str, ...]) -> None:
       fail(f"{path.relative_to(ROOT)} does not mention required term: {term}")
 
 
+def assert_not_mentions(path: Path, forbidden_terms: tuple[str, ...]) -> None:
+  content = read(path)
+  for term in forbidden_terms:
+    if term in content:
+      fail(f"{path.relative_to(ROOT)} mentions forbidden term: {term}")
+
+
 def main() -> int:
   for relative in REQUIRED_FILES:
     assert_file(relative)
@@ -104,6 +122,9 @@ def main() -> int:
       "FastAPI",
       "Gradio",
       "LangGraph",
+      "frontend",
+      "backend",
+      "agent",
     ),
   )
 
@@ -120,6 +141,26 @@ def main() -> int:
       "<type>: <한글 요약>",
     ),
   )
+
+  frontend_app = assert_file("apps/frontend/src/performation_frontend/app.py")
+  assert_mentions(frontend_app, ("httpx.post", "PERFORMATION_API_URL"))
+  assert_not_mentions(
+    frontend_app,
+    (
+      "performation_agent",
+      "performation_venue_data",
+      "langgraph",
+      "TAVILY_API_KEY",
+      "BRAVE_SEARCH_API_KEY",
+    ),
+  )
+
+  backend_app = assert_file("apps/backend/src/performation_backend/main.py")
+  assert_mentions(backend_app, ("FastAPI", "generate_visit_guide", "performation_agent"))
+
+  agent_workflow = assert_file("packages/agent/src/performation_agent/workflow.py")
+  assert_mentions(agent_workflow, ("StateGraph", "match_venue", "compose_guide"))
+  assert_not_mentions(agent_workflow, ("fastapi", "gradio", "httpx"))
 
   print("PASS: Performation harness structure is valid.")
   return 0
