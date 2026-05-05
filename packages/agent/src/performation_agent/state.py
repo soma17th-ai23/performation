@@ -35,8 +35,6 @@ class GuideState(TypedDict, total=False):
   input_intent: str
   input_type: str
   detail_keywords: list[str]
-  concert_keywords: list[str]
-  looks_like_concert: bool
   matched_venue_alias: str | None
   venue: VenueInfo | None
   search_queries: list[SearchQuery]

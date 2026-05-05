@@ -25,7 +25,7 @@ def test_workflow_has_expected_node_sequence() -> None:
 def test_supported_venue_returns_fallback_guide() -> None:
   guide = generate_visit_guide("KSPO DOME 콘서트 준비물")
 
-  assert guide.input_type == "venue_with_detail_question"
+  assert guide.input_type == "concert_with_venue_hint"
   assert guide.venue is not None
   assert guide.venue.name == "KSPO DOME"
   assert guide.fallback_used is True
@@ -67,6 +67,14 @@ def test_concert_query_with_venue_hint_infers_supported_venue() -> None:
   assert guide.checklist
 
 
+def test_concert_detail_query_with_venue_hint_keeps_concert_input_type() -> None:
+  guide = generate_visit_guide("아이유 콘서트 KSPO 스탠딩")
+
+  assert guide.input_type == "concert_with_venue_hint"
+  assert guide.venue is not None
+  assert guide.venue.name == "KSPO DOME"
+
+
 def test_venue_alias_with_live_word_stays_venue_name() -> None:
   guide = generate_visit_guide("예스24라이브홀")
 
@@ -87,8 +95,7 @@ def test_input_analysis_marks_concert_like_queries() -> None:
   result = analyze_input({"query": "아이유 콘서트 KSPO"})
 
   assert result["input_intent"] == "concert_or_event_name"
-  assert result["looks_like_concert"] is True
-  assert result["concert_keywords"] == ["콘서트"]
+  assert result["detail_keywords"] == []
 
 
 def test_search_queries_preserve_detail_and_localized_input() -> None:

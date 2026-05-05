@@ -7,7 +7,7 @@ Generated user-facing guides should use this stable shape unless the product UI 
 ```json
 {
   "input": "KSPO DOME 콘서트 준비물",
-  "input_type": "venue_with_detail_question",
+  "input_type": "concert_with_venue_hint",
   "venue": {
     "name": "KSPO DOME",
     "address": "",

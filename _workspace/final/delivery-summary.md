@@ -11,6 +11,7 @@
 - Added `concert_with_venue_hint` output contract and scenario S10.
 - Preserved ambiguous fallback when a concert query has no supported venue hint.
 - Added workflow and venue-data tests for venue aliases and concert-name inputs.
+- Addressed PR review feedback for normalized keyword matching, alias index reuse, generic alias safety, concert-detail input typing, and multi-venue ambiguity coverage.
 
 ## Validation
 

@@ -18,9 +18,17 @@ class VenueMatch:
   alias: str
 
 
+@dataclass(frozen=True)
+class VenueAlias:
+  venue: VenueInfo
+  alias: str
+  normalized_alias: str
+
+
 class VenueRepository:
   def __init__(self, venues: list[VenueInfo]) -> None:
     self._venues = venues
+    self._aliases = _build_alias_index(venues)
 
   @classmethod
   def from_json(cls, path: Path = DATA_PATH) -> "VenueRepository":
@@ -44,14 +52,14 @@ class VenueRepository:
   def find_matches_by_query(self, query: str) -> list[VenueMatch]:
     normalized = _normalize_for_match(query)
     matches: list[VenueMatch] = []
-    for venue in self._venues:
-      candidates = [venue.name, *venue.aliases]
-      for candidate in candidates:
-        normalized_candidate = _normalize_for_match(candidate)
-        if normalized_candidate and normalized_candidate in normalized:
-          matches.append(VenueMatch(venue=venue, alias=candidate))
-          break
-    return sorted(matches, key=lambda match: len(_normalize_for_match(match.alias)), reverse=True)
+    matched_venue_names: set[str] = set()
+    for venue_alias in self._aliases:
+      if venue_alias.venue.name in matched_venue_names:
+        continue
+      if venue_alias.normalized_alias in normalized:
+        matches.append(VenueMatch(venue=venue_alias.venue, alias=venue_alias.alias))
+        matched_venue_names.add(venue_alias.venue.name)
+    return matches
 
 
 @lru_cache(maxsize=1)
@@ -61,3 +69,23 @@ def get_default_repository() -> VenueRepository:
 
 def _normalize_for_match(value: str) -> str:
   return re.sub(r"[\W_]+", "", value.casefold())
+
+
+def _build_alias_index(venues: list[VenueInfo]) -> list[VenueAlias]:
+  aliases: list[VenueAlias] = []
+  seen: set[tuple[str, str]] = set()
+  for venue in venues:
+    for alias in [venue.name, *venue.aliases]:
+      normalized_alias = _normalize_for_match(alias)
+      key = (venue.name, normalized_alias)
+      if not normalized_alias or key in seen:
+        continue
+      aliases.append(
+        VenueAlias(
+          venue=venue,
+          alias=alias,
+          normalized_alias=normalized_alias,
+        )
+      )
+      seen.add(key)
+  return sorted(aliases, key=lambda item: len(item.normalized_alias), reverse=True)

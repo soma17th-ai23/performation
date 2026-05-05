@@ -9,16 +9,15 @@ CONCERT_KEYWORDS = ("콘서트", "공연", "투어", "팬미팅", "쇼케이스"
 
 def analyze_input(state: GuideState) -> GuideState:
   query = state["query"].strip()
-  detail_keywords = [keyword for keyword in DETAIL_KEYWORDS if keyword in query]
-  concert_keywords = [keyword for keyword in CONCERT_KEYWORDS if keyword in query]
+  normalized_query = query.casefold()
+  detail_keywords = [keyword for keyword in DETAIL_KEYWORDS if keyword.casefold() in normalized_query]
+  concert_keywords = [keyword for keyword in CONCERT_KEYWORDS if keyword.casefold() in normalized_query]
 
   return {
     "query": query,
-    "normalized_query": query.casefold(),
+    "normalized_query": normalized_query,
     "input_intent": _input_intent(detail_keywords, concert_keywords),
     "detail_keywords": detail_keywords,
-    "concert_keywords": concert_keywords,
-    "looks_like_concert": bool(concert_keywords),
   }
 
 

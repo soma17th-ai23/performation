@@ -5,7 +5,7 @@ Use these cases for smoke testing app behavior, prompts, and harness output.
 | ID | Input | Expected Classification | Key Checks |
 | --- | --- | --- | --- |
 | S1 | `KSPO DOME` | venue_name | venue basics, transit, entry notes, official-check section |
-| S2 | `KSPO DOME 콘서트 준비물` | venue_with_detail_question | checklist emphasis, source labels, latest official check |
+| S2 | `KSPO DOME 콘서트 준비물` | concert_with_venue_hint | checklist emphasis, source labels, latest official check |
 | S3 | `블루스퀘어` | venue_name | local venue coverage and supported-venue wording |
 | S4 | `예스24라이브홀 스탠딩` | venue_with_detail_question | standing-specific uncertainty and official-check wording |
 | S5 | unknown small venue | unsupported_or_ambiguous | ask for more detail or say MVP venue support is limited |

@@ -21,8 +21,8 @@ def _input_type_for(state: GuideState, has_venue: bool) -> str:
     return "unsupported_or_ambiguous"
 
   input_intent = state.get("input_intent")
-  if input_intent in {"detail_question", "concert_detail_question"}:
-    return "venue_with_detail_question"
-  if input_intent == "concert_or_event_name":
+  if input_intent in {"concert_or_event_name", "concert_detail_question"}:
     return "concert_with_venue_hint"
+  if input_intent == "detail_question":
+    return "venue_with_detail_question"
   return "venue_name"
