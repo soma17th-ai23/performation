@@ -14,10 +14,9 @@ def test_frontend_calls_backend_without_agent_imports() -> None:
 
 
 def test_agent_package_has_no_ui_or_api_framework_dependency() -> None:
-  agent_workflow = ROOT / "packages" / "agent" / "src" / "performation_agent" / "workflow.py"
-  content = agent_workflow.read_text(encoding="utf-8")
-
-  assert "fastapi" not in content.casefold()
-  assert "gradio" not in content.casefold()
-  assert "httpx" not in content.casefold()
-
+  agent_root = ROOT / "packages" / "agent" / "src" / "performation_agent"
+  for path in agent_root.rglob("*.py"):
+    content = path.read_text(encoding="utf-8").casefold()
+    assert "fastapi" not in content
+    assert "gradio" not in content
+    assert "httpx" not in content
