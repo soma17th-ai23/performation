@@ -1,0 +1,58 @@
+from performation_agent.tools.source_classifier import classify_search_result
+from performation_domain import ConfidenceLabel
+
+
+def test_classifies_official_venue_source() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "KSPO DOME 공연장 안내",
+      "url": "https://www.ksponco.or.kr/olympicpark/menu.es?mid=a20301030800",
+      "snippet": "올림픽공원 공식 공연장 안내입니다.",
+      "query": "KSPO DOME 공식 정보",
+    }
+  )
+
+  assert label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert "공식" in reason
+
+
+def test_public_review_domain_overrides_official_keywords() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "KSPO DOME 관람 후기",
+      "url": "https://example.tistory.com/kspo-review",
+      "snippet": "공식 공지를 보고 방문한 후기와 준비물 팁입니다.",
+      "query": "KSPO DOME 준비물 팁",
+    }
+  )
+
+  assert label == ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+  assert "참고용" in reason
+
+
+def test_event_specific_information_requires_latest_official_check() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "공연별 입장 시간과 물품보관 안내",
+      "url": "https://example.com/event-entry",
+      "snippet": "입장 시간, 입장 위치, 물품보관 운영 여부는 공연별로 달라질 수 있습니다.",
+      "query": "YES24 Live Hall 입장 시간 물품보관",
+    }
+  )
+
+  assert label == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
+  assert "최신 공식 확인" in reason
+
+
+def test_unknown_source_remains_uncertain() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "공연장 정보 모음",
+      "url": "https://example.com/venue",
+      "snippet": "여러 공연장의 일반 정보를 모았습니다.",
+      "query": "처음 보는 공연장",
+    }
+  )
+
+  assert label == ConfidenceLabel.UNCERTAIN
+  assert "불확실" in reason
