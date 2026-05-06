@@ -10,6 +10,7 @@ from performation_agent.nodes.extract_event_info import extract_event_info
 from performation_agent.nodes.infer_event_candidates import infer_event_candidates
 from performation_agent.nodes.infer_venue_from_search import infer_venue_from_search
 from performation_agent.nodes.load_venue_data import load_venue_data
+from performation_agent.nodes.search_kopis_official import search_kopis_official
 from performation_agent.nodes.summarize_information import summarize_information
 from performation_agent.workflow import NODE_SEQUENCE
 from performation_domain import ConfidenceLabel, EventInfo, VenueInfo
@@ -21,6 +22,7 @@ def test_workflow_has_expected_node_sequence() -> None:
     "load_venue_data",
     "build_search_queries",
     "search_public_web",
+    "search_kopis_official",
     "infer_venue_from_search",
     "infer_event_candidates",
     "extract_event_info",
@@ -29,6 +31,147 @@ def test_workflow_has_expected_node_sequence() -> None:
     "assign_confidence",
     "format_response",
   )
+
+
+def test_search_kopis_official_merges_official_results() -> None:
+  class FakeKopisProvider:
+    def search_performances(self, query: str):
+      return [
+        {
+          "title": "EK 3rd Concert : You Good? - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF999999",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 5월 10일. 공연장소 예스24라이브홀. 지역 서울특별시.",
+          "query": f"{query} KOPIS 공식 정보 일정 장소",
+        }
+      ]
+
+  result = search_kopis_official(
+    {
+      "query": "EK 콘서트",
+      "input_intent": "concert_or_event_name",
+      "search_results": [
+        {
+          "title": "기존 공개 검색 결과",
+          "url": "https://example.com/result",
+          "snippet": "공개 검색 결과",
+          "query": "EK 콘서트 공식 정보",
+        }
+      ],
+      "fallback_used": False,
+    },
+    provider=FakeKopisProvider(),
+  )
+
+  assert len(result["search_results"]) == 2
+  assert result["search_results"][0]["title"].endswith("KOPIS 공연 공식 데이터")
+  assert result["fallback_used"] is False
+
+
+def test_search_kopis_official_skips_supported_venue_name() -> None:
+  class FailingKopisProvider:
+    def search_performances(self, query: str):
+      raise AssertionError("KOPIS should not run for pure supported venue names")
+
+  result = search_kopis_official(
+    {
+      "query": "예스24라이브홀",
+      "input_intent": "venue_or_concert_name",
+      "venue": VenueInfo(name="YES24 Live Hall"),
+    },
+    provider=FailingKopisProvider(),
+  )
+
+  assert result == {}
+
+
+def test_kopis_source_is_classified_as_official() -> None:
+  result = classify_sources(
+    {
+      "search_results": [
+        {
+          "title": "EK 3rd Concert : You Good? - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF999999",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 5월 10일. 공연장소 예스24라이브홀.",
+          "query": "EK 콘서트 KOPIS 공식 정보 일정 장소",
+        }
+      ]
+    }
+  )
+
+  assert result["sources"][0].source_type == ConfidenceLabel.OFFICIAL_CONFIRMED
+
+
+def test_kopis_candidate_uses_official_confidence() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 서울 - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF999999",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 7월 24일~26일. 공연장소 킨텍스 야외 글로벌 스테이지. 지역 서울특별시.",
+          "query": "워터밤 KOPIS 공식 정보 일정 장소",
+        }
+      ],
+    }
+  )
+
+  assert result["event_candidates"][0].confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert result["event_candidates"][0].venue_name == "킨텍스 야외 글로벌 스테이지"
+
+
+def test_kopis_candidates_include_non_mvp_regional_options() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 [서울] - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF284703",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 7월 24일~26일. 공연장소 킨텍스. 지역 경기도.",
+          "query": "워터밤 KOPIS 공식 정보 일정 장소",
+        },
+        {
+          "title": "워터밤 [속초] - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF284704",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 8월 22일. 공연장소 한화리조트 [설악 쏘라노]. 지역 강원특별자치도.",
+          "query": "워터밤 KOPIS 공식 정보 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert [(candidate.region, candidate.venue_name) for candidate in candidates] == [
+    ("서울", "킨텍스"),
+    ("속초", "한화리조트 [설악 쏘라노]"),
+  ]
+  assert all(candidate.confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED for candidate in candidates)
+
+
+def test_kopis_event_info_uses_official_confidence() -> None:
+  result = extract_event_info(
+    {
+      "query": "EK 콘서트",
+      "input_intent": "concert_or_event_name",
+      "venue": VenueInfo(name="YES24 Live Hall", aliases=["예스24라이브홀"]),
+      "search_results": [
+        {
+          "title": "EK 3rd Concert : You Good? - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF999999",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 5월 10일. 공연장소 예스24라이브홀. 지역 서울특별시.",
+          "query": "EK 콘서트 KOPIS 공식 정보 일정 장소",
+        }
+      ],
+    }
+  )
+
+  assert result["event_info"].confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert result["event_info"].date_text == "2026년 5월 10일"
 
 
 def test_supported_venue_returns_fallback_guide() -> None:

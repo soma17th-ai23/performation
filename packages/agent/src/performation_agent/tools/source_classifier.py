@@ -30,6 +30,7 @@ OFFICIAL_DOMAINS = (
   "ticketlink.co.kr",
   "mcst.go.kr",
   "culture.go.kr",
+  "kopis.or.kr",
 )
 OFFICIAL_HINTS = (
   "official",

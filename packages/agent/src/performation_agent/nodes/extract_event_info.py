@@ -20,7 +20,7 @@ SOURCE_PRIORITY = {
   ConfidenceLabel.PUBLIC_REVIEW_REFERENCE: 1,
 }
 PUBLIC_SOURCE_HINTS = ("blog", "tistory", "namu.wiki", "kin.naver", "후기", "리뷰")
-OFFICIAL_SOURCE_HINTS = ("instagram.com", "yes24.com", "ticket.yes24.com")
+OFFICIAL_SOURCE_HINTS = ("instagram.com", "yes24.com", "ticket.yes24.com", "kopis.or.kr")
 TICKET_SOURCE_HINTS = ("stagepick.co.kr", "trip.com/events", "ticketlink.co.kr", "tickets.interpark.com")
 
 
@@ -126,7 +126,10 @@ def _date_text(evidence_text: str) -> str:
 
 
 def _normalize_date(value: str) -> str:
-  return re.sub(r"\s+", "", value).replace(".", ".").strip(".")
+  normalized = re.sub(r"\s+", " ", value).strip()
+  if "년" in normalized:
+    return normalized
+  return re.sub(r"\s*[.]\s*", ".", normalized).strip(".")
 
 
 def _time_text(evidence_text: str) -> str:
@@ -161,6 +164,8 @@ def _source_type(result: SearchResult) -> ConfidenceLabel:
   text = " ".join((result["title"], result["url"], result["snippet"])).casefold()
   if any(term in text for term in PUBLIC_SOURCE_HINTS):
     return ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+  if "kopis.or.kr" in text or "kopis 공연 공식 데이터" in text:
+    return ConfidenceLabel.OFFICIAL_CONFIRMED
   if any(term in text for term in OFFICIAL_SOURCE_HINTS) and "공지" in text:
     return ConfidenceLabel.OFFICIAL_CONFIRMED
   if any(term in text for term in TICKET_SOURCE_HINTS):

@@ -21,6 +21,7 @@ KOREAN_REGIONS = (
   "고양",
   "성남",
   "과천",
+  "속초",
   "춘천",
   "강릉",
   "청주",
@@ -42,14 +43,15 @@ DATE_RANGE_PATTERNS = (
 REGION_DATE_PAIR_PATTERN = re.compile(r"(" + "|".join(KOREAN_REGIONS) + r")\s*\(([^)]*(?:월|일)[^)]*)\)")
 YEAR_PATTERN = re.compile(r"(20\d{2})")
 VENUE_PATTERN = re.compile(
-  r"(?:장소|venue|공연장)(?:은|는|이|가)?[:：]?\s*([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-]{1,40})",
+  r"(?:공연\s*장소|공연장|장소|venue)(?:은|는|이|가)?[:：]?\s*([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-\[\]]{1,40})",
   re.IGNORECASE,
 )
 STRICT_VENUE_PATTERN = re.compile(
-  r"(?:장소|venue|공연장)(?:은|는|이|가|[:：])+\s*['\"]?([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-]{1,40})",
+  r"(?:공연\s*장소|공연장|장소|venue)(?:은|는|이|가|[:：])+\s*['\"]?([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-\[\]]{1,40})",
   re.IGNORECASE,
 )
 CONFIDENCE_PRIORITY = {
+  ConfidenceLabel.OFFICIAL_CONFIRMED: 4,
   ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED: 3,
   ConfidenceLabel.PUBLIC_REVIEW_REFERENCE: 2,
   ConfidenceLabel.UNCERTAIN: 1,
@@ -63,6 +65,7 @@ OFFICIAL_SOURCE_HINTS = (
   "ticket.melon.com",
   "tickets.interpark.com",
   "instagram.com",
+  "kopis.or.kr",
 )
 
 
@@ -340,6 +343,8 @@ def _candidate_confidence(result: SearchResult) -> ConfidenceLabel:
   text = " ".join((result["title"], result["url"], result["snippet"])).casefold()
   if any(term in text for term in PUBLIC_SOURCE_HINTS):
     return ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+  if "kopis.or.kr" in text or "kopis 공연" in text:
+    return ConfidenceLabel.OFFICIAL_CONFIRMED
   if any(term in text for term in OFFICIAL_SOURCE_HINTS):
     return ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
   if any(term in text for term in ("공식", "official", "ticket", "예매", "공지")):

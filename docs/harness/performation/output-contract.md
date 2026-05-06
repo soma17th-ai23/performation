@@ -84,7 +84,7 @@ Generated user-facing guides should use this stable shape unless the product UI 
 
 | Label | Meaning | Examples |
 | --- | --- | --- |
-| `official_confirmed` | official or public-data source | venue site, ticket seller, public transport or public-data page |
+| `official_confirmed` | official or public-data source | venue site, ticket seller, KOPIS, public transport or public-data page |
 | `public_review_reference` | anecdotal open web source | public blog, open review, guide post |
 | `latest_official_check_required` | may change by event/date/operator | entry gate, locker operation, ID check, standing rules |
 | `uncertain` | sparse, conflicting, or low-quality evidence | one-off result, unclear source, contradiction without official anchor |
