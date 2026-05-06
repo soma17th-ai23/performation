@@ -58,6 +58,20 @@ def test_official_sns_notice_requires_latest_official_check() -> None:
   assert "SNS" in reason
 
 
+def test_threads_dot_com_is_treated_as_sns() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "EK 공식 Threads 공지",
+      "url": "https://www.threads.com/@mba_ek/post/example",
+      "snippet": "공식 계정 공지에서 일정과 장소를 안내합니다.",
+      "query": "EK 콘서트 공식 SNS 공지",
+    }
+  )
+
+  assert label == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
+  assert "SNS" in reason
+
+
 def test_unverified_sns_post_is_uncertain() -> None:
   label, reason = classify_search_result(
     {

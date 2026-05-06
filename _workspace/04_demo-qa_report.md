@@ -3,7 +3,7 @@
 ## Commands
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 85 passed
+- `uv run --python 3.11 pytest` - pass, 91 passed
 - `git diff --check` - pass
 - `.env` loaded in-process + `generate_visit_guide("워터밤")` - pass
 - `.env` loaded in-process + FastAPI `TestClient` smoke for `/health` and `/guides` - pass
@@ -12,18 +12,25 @@
 - KOPIS canonical HTTPS endpoint smoke - pass
 - KOPIS key injected through hidden stdin/env + alias-expanded `search_kopis_with_fallback("랩비트 페스티벌")` - pass, no current KOPIS result
 - Unit scenarios for official SNS notice, generic SNS post, and fan/review SNS post classification - pass
+- Unit scenario for `threads.com` SNS classification - pass
 - Review regression: lower-confidence SNS/review evidence does not fill fields on higher-confidence event info - pass
+- Live multi-concert smoke with Tavily+Gemini configured and KOPIS absent in `.env`: `랩비트 페스티벌`, `워터밤`, `EK 콘서트`, `아이유 콘서트 KSPO`, `데이식스 콘서트`, `싸이 흠뻑쇼` - pass
 
 ## Scenarios
 
 | ID | Input | Result | Notes |
 | --- | --- | --- | --- |
 | S12 | `워터밤` | `event_candidates` | 실제 Tavily 검색 기준 2026 서울/부산 후보 반환, 과거 회차 후보 제거 |
+| live | `워터밤` | `event_candidates` | 잘못된 `고양` 지역 후보 제거 확인, 서울/부산 후보만 노출 |
 | KOPIS | `워터밤` | `event_candidates` | 실제 KOPIS 기준 서울/속초 후보 반환, 각 후보 `official_confirmed` |
 | S1/S10 | `KSPO DOME 콘서트 준비물` | `concert_with_venue_hint` | backend API에서 KSPO DOME venue guide 반환 |
 | broad event | `랩비트 공연` | `event_candidates` | backend API에서 후보 4개 반환 |
 | broad event | `랩비트 페스티벌` | `event_candidates` | backend API에서 2026 서울/문화비축기지 후보 반환, 과거 회차 후보 제거 |
 | single concert | `EK 콘서트` | `concert_with_inferred_venue` + `event_info` | backend API에서 YES24 Live Hall, `2026.05.10`, `18:00` 표시 |
+| live | `EK 콘서트` | `concert_with_inferred_venue` + `event_info` | 실제 Tavily+Gemini 기준 YES24 Live Hall, `2026.05.10` 표시 |
+| live | `아이유 콘서트 KSPO` | `concert_with_venue_hint` | 과거 2019 공연 일정을 단일 공연 정보로 표시하지 않음 |
+| live | `데이식스 콘서트` | `concert_with_inferred_venue` | 과거 날짜 공연 정보를 단일 공연 정보로 표시하지 않음 |
+| live | `싸이 흠뻑쇼` | `unsupported_or_ambiguous` | 연도 없는 검색에서 2025 지역 후보를 제거하고 확정 후보로 강제하지 않음 |
 | KOPIS | `EK 콘서트` | `concert_with_inferred_venue` + `event_info` | 실제 KOPIS 기준 YES24 Live Hall, `2026년 5월 10일`, `official_confirmed` |
 | KOPIS alias | `랩비트 페스티벌` | no KOPIS result | `RAPBEAT`/`RAP BEAT` alias까지 검색했지만 현재 KOPIS 공식 목록 결과 없음 |
 | SNS source | `랩비트 페스티벌 공식 SNS 공지` | `latest_official_check_required` | 공개 검색 결과의 공식 SNS 공지는 후보 추론에 사용하되 공식 확정으로 과승격하지 않음 |
@@ -32,4 +39,5 @@
 
 - 라이브 검색 결과는 Tavily 색인 상태에 따라 후보 개수와 세부 후보명이 달라질 수 있습니다.
 - KOPIS에 없는 공연명은 기존 public search/fallback 경로에 의존합니다.
+- 현재 `.env` 기준 라이브 다건 테스트에는 KOPIS 키가 없어서 KOPIS 공식 데이터 병합은 별도 키 주입 smoke 결과에 의존합니다.
 - SNS 검색 결과는 검색 snippet 품질에 의존하므로 공식 확인 채널로만 사용합니다.

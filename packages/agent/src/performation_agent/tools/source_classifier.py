@@ -34,6 +34,7 @@ OFFICIAL_DOMAINS = (
 )
 SOCIAL_DOMAINS = (
   "instagram.com",
+  "threads.com",
   "threads.net",
   "x.com",
   "twitter.com",

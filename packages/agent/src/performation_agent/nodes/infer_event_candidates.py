@@ -171,7 +171,10 @@ def _region(title: str, snippet: str) -> str:
 
   snippet_regions = list(dict.fromkeys(REGION_PATTERN.findall(snippet)))
   if len(snippet_regions) == 1:
-    return snippet_regions[0]
+    region = snippet_regions[0]
+    if _region_looks_like_address_only(region, snippet):
+      return ""
+    return region
   return ""
 
 
@@ -269,7 +272,7 @@ def _pair_date_text(evidence_text: str, date_part: str) -> str:
 
 def _filter_candidates(candidates: list[EventCandidate], query: str) -> list[EventCandidate]:
   if not YEAR_PATTERN.search(query):
-    candidates = _drop_past_candidates_when_current_exists(candidates)
+    candidates = _drop_past_candidates(candidates)
   candidates = _drop_undated_duplicates(candidates)
   return candidates[:6]
 
@@ -278,17 +281,9 @@ def _candidate_evidence_query(query: str) -> bool:
   return any(marker in query for marker in ("공식 정보", "공식 SNS 공지", "일정 장소"))
 
 
-def _drop_past_candidates_when_current_exists(candidates: list[EventCandidate]) -> list[EventCandidate]:
-  current_year = date.today().year
-  candidate_years = [_candidate_year(candidate, current_year=current_year) for candidate in candidates]
-  if not any(candidate_year is not None and candidate_year >= current_year for candidate_year in candidate_years):
-    return candidates
-
-  return [
-    candidate
-    for candidate, candidate_year in zip(candidates, candidate_years, strict=True)
-    if candidate_year is None or candidate_year >= current_year
-  ]
+def _drop_past_candidates(candidates: list[EventCandidate]) -> list[EventCandidate]:
+  today = date.today()
+  return [candidate for candidate in candidates if not _candidate_is_past(candidate, today=today)]
 
 
 def _drop_undated_duplicates(candidates: list[EventCandidate]) -> list[EventCandidate]:
@@ -307,6 +302,41 @@ def _candidate_year(candidate: EventCandidate, *, current_year: int) -> int | No
   if candidate.date_text:
     return current_year
   return None
+
+
+def _candidate_is_past(candidate: EventCandidate, *, today: date) -> bool:
+  if not candidate.date_text:
+    return False
+
+  candidate_date = _candidate_start_date(candidate.date_text, today=today)
+  if candidate_date is not None:
+    return candidate_date < today
+
+  candidate_year = _candidate_year(candidate, current_year=today.year)
+  return candidate_year is not None and candidate_year < today.year
+
+
+def _candidate_start_date(value: str, *, today: date) -> date | None:
+  full_date_match = re.search(r"(20\d{2})년\s*([0-9]{1,2})월\s*([0-9]{1,2})(?:일)?", value)
+  if full_date_match:
+    return _safe_date(
+      int(full_date_match.group(1)),
+      int(full_date_match.group(2)),
+      int(full_date_match.group(3)),
+    )
+
+  month_day_match = re.search(r"([0-9]{1,2})월\s*([0-9]{1,2})(?:일)?", value)
+  if month_day_match:
+    return _safe_date(today.year, int(month_day_match.group(1)), int(month_day_match.group(2)))
+
+  return None
+
+
+def _safe_date(year: int, month: int, day: int) -> date | None:
+  try:
+    return date(year, month, day)
+  except ValueError:
+    return None
 
 
 def _venue_name(*evidence_fields: str) -> str:
@@ -328,9 +358,28 @@ def _first_clean_venue_name(pattern: re.Pattern[str], evidence_text: str) -> str
 
 def _clean_venue_name(value: str) -> str:
   cleaned = value.strip(" .,/|'\"")
-  for marker in ("에서", "으로", " 초호화", " 라인업", " 공식", " 공지", " 안내", " 일정", " 예매", " - "):
+  for marker in (
+    "에서",
+    "으로",
+    " 올해는",
+    " 올해",
+    " 더 강력",
+    " 사운드",
+    " 물총",
+    " 음악의",
+    " 초호화",
+    " 라인업",
+    " 공식",
+    " 공지",
+    " 안내",
+    " 일정",
+    " 예매",
+    " - ",
+  ):
     cleaned = cleaned.split(marker, 1)[0]
   cleaned = cleaned.strip(" .,/|'\"")
+  for region in KOREAN_REGIONS:
+    cleaned = re.sub(rf"^{region}\s+(킨텍스\b)", r"\1", cleaned)
   if cleaned.startswith("안내"):
     return ""
   if any(term in cleaned for term in ("티켓팅", "예매", "가격", "준비물", "라인업", "출연진", "추후 공개", "추후공지", "미정")):
@@ -360,3 +409,10 @@ def _candidate_confidence(result: SearchResult) -> ConfidenceLabel:
 def _first_match(pattern: re.Pattern[str], text: str) -> str:
   match = pattern.search(text)
   return match.group(1).strip() if match else ""
+
+
+def _region_looks_like_address_only(region: str, snippet: str) -> bool:
+  compact_snippet = re.sub(r"\s+", "", snippet)
+  if region == "고양" and any(term in compact_snippet for term in ("킨텍스", "일산", "경기고양", "고양시")):
+    return True
+  return False

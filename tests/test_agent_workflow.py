@@ -485,6 +485,33 @@ def test_infer_event_candidates_prefers_current_candidates_for_yearless_query() 
   assert all(str(last_year) not in candidate.date_text for candidate in candidates)
 
 
+def test_infer_event_candidates_drops_past_only_candidates_for_yearless_query() -> None:
+  last_year = date.today().year - 1
+  result = infer_event_candidates(
+    {
+      "query": "싸이 흠뻑쇼",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": f"싸이 흠뻑쇼 인천 {last_year} 공식 일정",
+          "url": "https://www.instagram.com/psy_oppa/p/example/",
+          "snippet": f"{last_year}년 인천 공연 공식 공지",
+          "query": "싸이 흠뻑쇼 공식 정보",
+        },
+        {
+          "title": f"싸이 흠뻑쇼 대전 {last_year} 공식 일정",
+          "url": "https://www.instagram.com/psy_oppa/p/example2/",
+          "snippet": f"{last_year}년 대전 공연 공식 공지",
+          "query": "싸이 흠뻑쇼 공식 SNS 공지",
+        },
+      ],
+    }
+  )
+
+  assert result == {}
+
+
 def test_infer_event_candidates_uses_title_region_before_address_region() -> None:
   result = infer_event_candidates(
     {
@@ -505,6 +532,49 @@ def test_infer_event_candidates_uses_title_region_before_address_region() -> Non
   candidates = result["event_candidates"]
   assert candidates[0].region == "서울"
   assert candidates[0].name == "워터밤 서울"
+
+
+def test_infer_event_candidates_does_not_use_kintex_address_as_region_without_event_region() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "WATERBOMB KOREA 공식 장소 안내",
+          "url": "https://www.waterbombfestival.com/tour-seoul",
+          "snippet": "공연 장소: 고양 킨텍스 야외 글로벌 스테이지 올해는 더 강력한 사운드로 진행. 경기 고양시 일산서구 킨텍스로",
+          "query": "워터밤 공식 정보",
+        }
+      ],
+    }
+  )
+
+  assert result == {}
+
+
+def test_infer_event_candidates_trims_kintex_marketing_copy() -> None:
+  current_year = date.today().year
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": f"워터밤 서울 {current_year} 장소: 고양 킨텍스 야외 글로벌 스테이지 올해는 더 강력한 사운드",
+          "url": "https://www.waterbombfestival.com/tour-seoul",
+          "snippet": f"공식 공지. {current_year}년 7월 24일 개최",
+          "query": "워터밤 공식 정보",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].region == "서울"
+  assert candidates[0].venue_name == "킨텍스 야외 글로벌 스테이지"
 
 
 def test_infer_event_candidates_does_not_trust_public_review_venue() -> None:
@@ -716,6 +786,52 @@ def test_extract_event_info_does_not_fill_fields_from_lower_confidence_source() 
   assert event_info.date_text == "2026년 5월 10일"
   assert event_info.time_text == ""
   assert len(event_info.sources) == 1
+
+
+def test_extract_event_info_skips_past_dates_for_yearless_query() -> None:
+  last_year = date.today().year - 1
+  result = extract_event_info(
+    {
+      "query": "아이유 콘서트 KSPO",
+      "input_intent": "concert_or_event_name",
+      "input_type": "concert_with_venue_hint",
+      "venue": VenueInfo(name="KSPO DOME", aliases=["올림픽체조경기장", "KSPO"]),
+      "search_results": [
+        {
+          "title": f"아이유 콘서트 KSPO ({last_year}.11.22)",
+          "url": "https://ticket.example.com/iu-old",
+          "snippet": f"아이유 공연은 {last_year}.11.22 KSPO DOME에서 진행되었습니다.",
+          "query": "아이유 콘서트 KSPO 공식 정보",
+        }
+      ],
+    }
+  )
+
+  assert result == {}
+
+
+def test_extract_event_info_keeps_requested_past_year() -> None:
+  last_year = date.today().year - 1
+  result = extract_event_info(
+    {
+      "query": f"{last_year} 아이유 콘서트 KSPO",
+      "input_intent": "concert_or_event_name",
+      "input_type": "concert_with_venue_hint",
+      "venue": VenueInfo(name="KSPO DOME", aliases=["올림픽체조경기장", "KSPO"]),
+      "search_results": [
+        {
+          "title": f"아이유 콘서트 KSPO ({last_year}.11.22)",
+          "url": "https://ticket.example.com/iu-old",
+          "snippet": f"아이유 공연은 {last_year}.11.22 KSPO DOME에서 진행되었습니다.",
+          "query": f"{last_year} 아이유 콘서트 KSPO 공식 정보",
+        }
+      ],
+    }
+  )
+
+  event_info = result["event_info"]
+  assert event_info.date_text == f"{last_year}.11.22"
+  assert event_info.venue_name == "KSPO DOME"
 
 
 def test_infer_event_candidates_preserves_date_ranges() -> None:
