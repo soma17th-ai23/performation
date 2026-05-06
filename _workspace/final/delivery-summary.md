@@ -14,6 +14,7 @@
 - Filtered KOPIS short-term false positives so `EK` does not match unrelated titles like `WEEK` or `NEKIRU`.
 - Expanded official event candidates to include non-MVP regions from KOPIS, verified with `워터밤 서울` and `워터밤 속초`.
 - Addressed PR review feedback by using canonical HTTPS KOPIS transport, bounding lookahead days, hardening XML parsing, and prioritizing KOPIS evidence before public search results.
+- Added KOPIS alias expansion for known Korean event names, starting with `랩비트` -> `RAPBEAT` / `RAP BEAT` variants.
 
 ## Validation
 
@@ -24,3 +25,4 @@
   - KOPIS key injected through hidden stdin/env + `generate_visit_guide("EK 콘서트")` returned YES24 Live Hall, `2026년 5월 10일`, `official_confirmed`
   - KOPIS key injected through hidden stdin/env + `generate_visit_guide("워터밤")` returned 서울/속초 official candidates
   - `랩비트 페스티벌` returned no KOPIS result, so it remains covered by public search/fallback behavior
+  - Alias-expanded `랩비트 페스티벌` KOPIS smoke still returned no current KOPIS result

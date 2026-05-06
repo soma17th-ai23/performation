@@ -25,6 +25,7 @@
 | `워터밤` | `워터밤 서울`, `2026년 7월 24일~26일`, `킨텍스` | Valid via KOPIS | Live KOPIS lookup returns the Seoul event as official data with performance venue `킨텍스`. |
 | `워터밤` | `워터밤 속초`, `2026년 8월 22일`, `한화리조트 [설악 쏘라노]` | Valid via KOPIS | Live KOPIS lookup returns the Sokcho event as official data. |
 | `랩비트 페스티벌` | none from KOPIS | KOPIS unavailable for this query | Live KOPIS lookup returned no list result, so this query still depends on public search evidence and fallback behavior. |
+| `랩비트 페스티벌` | none from KOPIS after alias expansion | KOPIS unavailable for this query | Live KOPIS lookup with `랩비트`, `RAPBEAT`, `RAP BEAT`, `RAPBEAT FESTIVAL`, and `RAP BEAT FESTIVAL` returned no list result. A broad KOPIS date scan for 2026-06-20~2026-06-21 also did not include RAPBEAT. |
 
 ## Implementation Notes
 
@@ -36,3 +37,4 @@
 - Single inferred concert flows now extract `event_info` so date/time/venue can be shown separately from general venue guidance.
 - KOPIS title filtering rejects short ASCII false positives such as `EK` matching inside `WEEK` or `NEKIRU`.
 - KOPIS event candidates include non-MVP regional options when official title regions are present, such as `워터밤 [속초]`.
+- KOPIS search now expands known Korean event aliases, so `랩비트` also tries `RAPBEAT`, `RAP BEAT`, `RAPBEAT FESTIVAL`, and `RAP BEAT FESTIVAL`.

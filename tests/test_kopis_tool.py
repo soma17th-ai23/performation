@@ -110,6 +110,56 @@ def test_kopis_provider_normalizes_performance_list_xml() -> None:
   ]
 
 
+def test_kopis_provider_expands_known_korean_event_aliases() -> None:
+  requested_terms: list[str] = []
+
+  def handler(request: httpx.Request) -> httpx.Response:
+    search_term = request.url.params["shprfnm"]
+    requested_terms.append(search_term)
+    if search_term != "RAPBEAT":
+      return httpx.Response(200, text="<dbs></dbs>")
+    return httpx.Response(
+      200,
+      text="""
+      <dbs>
+        <db>
+          <mt20id>PF333333</mt20id>
+          <prfnm>RAPBEAT 2026</prfnm>
+          <prfpdfrom>2026.06.20</prfpdfrom>
+          <prfpdto>2026.06.21</prfpdto>
+          <fcltynm>문화비축기지</fcltynm>
+          <area>서울특별시</area>
+          <genrenm>대중음악</genrenm>
+          <prfstate>공연예정</prfstate>
+        </db>
+      </dbs>
+      """,
+    )
+
+  with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+    provider = KopisPerformanceProvider(
+      "kopis-test",
+      client=client,
+      start_date=date(2026, 6, 1),
+      lookahead_days=0,
+      rows=2,
+    )
+    results = provider.search_performances("랩비트 페스티벌")
+
+  assert requested_terms[:2] == ["랩비트", "RAPBEAT"]
+  assert results == [
+    {
+      "title": "RAPBEAT 2026 - KOPIS 공연 공식 데이터",
+      "url": KOPIS_PERFORMANCE_PAGE_URL.format(performance_id="PF333333"),
+      "snippet": (
+        "공식 KOPIS 공연 데이터. 공연명 RAPBEAT 2026. 공연기간 2026년 6월 20일~21일. "
+        "공연장소 문화비축기지. 지역 서울특별시. 장르 대중음악. 공연상태 공연예정."
+      ),
+      "query": "랩비트 페스티벌 KOPIS 공식 정보 일정 장소",
+    }
+  ]
+
+
 def test_search_kopis_with_fallback_handles_provider_errors() -> None:
   class FailingProvider:
     def search_performances(self, query: str):

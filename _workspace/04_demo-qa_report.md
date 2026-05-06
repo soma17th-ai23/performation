@@ -10,6 +10,7 @@
 - KOPIS key injected through hidden stdin/env + `generate_visit_guide("EK 콘서트")` - pass
 - KOPIS key injected through hidden stdin/env + `generate_visit_guide("워터밤")` - pass
 - KOPIS canonical HTTPS endpoint smoke - pass
+- KOPIS key injected through hidden stdin/env + alias-expanded `search_kopis_with_fallback("랩비트 페스티벌")` - pass, no current KOPIS result
 
 ## Scenarios
 
@@ -22,6 +23,7 @@
 | broad event | `랩비트 페스티벌` | `event_candidates` | backend API에서 2026 서울/문화비축기지 후보 반환, 과거 회차 후보 제거 |
 | single concert | `EK 콘서트` | `concert_with_inferred_venue` + `event_info` | backend API에서 YES24 Live Hall, `2026.05.10`, `18:00` 표시 |
 | KOPIS | `EK 콘서트` | `concert_with_inferred_venue` + `event_info` | 실제 KOPIS 기준 YES24 Live Hall, `2026년 5월 10일`, `official_confirmed` |
+| KOPIS alias | `랩비트 페스티벌` | no KOPIS result | `RAPBEAT`/`RAP BEAT` alias까지 검색했지만 현재 KOPIS 공식 목록 결과 없음 |
 
 ## Risks
 

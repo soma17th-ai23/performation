@@ -22,6 +22,9 @@ MAX_KOPIS_LOOKAHEAD_DAYS = 365
 MAX_KOPIS_WINDOW_DAYS = 31
 MAX_KOPIS_RESPONSE_BYTES = 2_000_000
 GENERIC_TERMS = ("콘서트", "공연", "페스티벌", "일정", "장소", "정보", "티켓", "예매", "준비물", "스탠딩")
+KOPIS_SEARCH_ALIASES = {
+  "랩비트": ("RAPBEAT", "RAP BEAT", "RAPBEAT FESTIVAL", "RAP BEAT FESTIVAL"),
+}
 
 
 class KopisProvider(Protocol):
@@ -48,23 +51,24 @@ class KopisPerformanceProvider:
     self._start_date = start_date or date.today()
 
   def search_performances(self, query: str) -> list[SearchResult]:
-    search_term = _search_term(query)
-    if not search_term:
+    search_terms = _search_terms(query)
+    if not search_terms:
       return []
 
     if self._injected_client is not None:
-      return self._search_with_client(self._injected_client, query=query, search_term=search_term)
+      return self._search_with_client(self._injected_client, query=query, search_terms=search_terms)
     with httpx.Client(timeout=self._timeout_seconds) as client:
-      return self._search_with_client(client, query=query, search_term=search_term)
+      return self._search_with_client(client, query=query, search_terms=search_terms)
 
-  def _search_with_client(self, client: httpx.Client, *, query: str, search_term: str) -> list[SearchResult]:
+  def _search_with_client(self, client: httpx.Client, *, query: str, search_terms: list[str]) -> list[SearchResult]:
     results: list[SearchResult] = []
-    for start, end in _date_windows(self._start_date, self._lookahead_days):
-      response = self._get(client, search_term=search_term, start=start, end=end)
-      response.raise_for_status()
-      if len(response.content) > MAX_KOPIS_RESPONSE_BYTES:
-        raise ValueError("KOPIS response is too large")
-      results.extend(_normalize_kopis_results(response.text, query=query))
+    for search_term in search_terms:
+      for start, end in _date_windows(self._start_date, self._lookahead_days):
+        response = self._get(client, search_term=search_term, start=start, end=end)
+        response.raise_for_status()
+        if len(response.content) > MAX_KOPIS_RESPONSE_BYTES:
+          raise ValueError("KOPIS response is too large")
+        results.extend(_normalize_kopis_results(response.text, query=query, match_query=search_term))
     return _dedupe_results(results)
 
   def _get(self, client: httpx.Client, *, search_term: str, start: date, end: date) -> httpx.Response:
@@ -116,7 +120,7 @@ def build_kopis_provider_from_env(env: Mapping[str, str] | None = None) -> Kopis
   )
 
 
-def _normalize_kopis_results(payload: str, *, query: str) -> list[SearchResult]:
+def _normalize_kopis_results(payload: str, *, query: str, match_query: str) -> list[SearchResult]:
   root = ET.fromstring(payload)
   results: list[SearchResult] = []
   for item in root.findall(".//db"):
@@ -124,7 +128,7 @@ def _normalize_kopis_results(payload: str, *, query: str) -> list[SearchResult]:
     title = _text(item, "prfnm")
     if not performance_id or not title:
       continue
-    if not _matches_query_title(title, query):
+    if not _matches_query_title(title, match_query):
       continue
     results.append(
       {
@@ -170,6 +174,24 @@ def _search_term(query: str) -> str:
     normalized = normalized.replace(term, " ")
   normalized = re.sub(r"\s+", " ", normalized).strip()
   return normalized if len(normalized) >= 2 else ""
+
+
+def _search_terms(query: str) -> list[str]:
+  search_term = _search_term(query)
+  if not search_term:
+    return []
+
+  candidates = [search_term, *KOPIS_SEARCH_ALIASES.get(search_term.casefold(), ())]
+  deduped: list[str] = []
+  seen: set[str] = set()
+  for candidate in candidates:
+    normalized = candidate.strip()
+    key = normalized.casefold()
+    if not normalized or key in seen:
+      continue
+    deduped.append(normalized)
+    seen.add(key)
+  return deduped
 
 
 def _matches_query_title(title: str, query: str) -> bool:
