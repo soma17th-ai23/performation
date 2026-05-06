@@ -2,8 +2,16 @@
 
 ## Scope
 
-- Inputs checked: `랩비트 페스티벌`, `워터밤`
-- Goal: verify whether generated event candidates match current public/official evidence.
+- Inputs checked: `랩비트 페스티벌`, `워터밤`, `EK 콘서트`, KOPIS OpenAPI contract
+- Goal: verify whether generated event candidates match current public/official evidence and define KOPIS as an official performance data source.
+
+## KOPIS Contract
+
+- KOPIS performance list endpoint: `http://www.kopis.or.kr/openApi/restful/pblprfr`
+- KOPIS performance detail endpoint: `http://www.kopis.or.kr/openApi/restful/pblprfr/{공연아이디}`
+- Required list parameters include `service`, `stdate`, `eddate`, `cpage`, and `rows`; `shprfnm` filters by performance name.
+- KOPIS returns XML and includes fields such as `mt20id`, `prfnm`, `prfpdfrom`, `prfpdto`, `fcltynm`, `area`, `genrenm`, and `prfstate`.
+- KOPIS evidence should be classified as `official_confirmed`; KOPIS failure should not block public search or local venue fallback.
 
 ## Findings
 

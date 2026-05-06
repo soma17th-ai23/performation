@@ -7,7 +7,7 @@ Performation is an Agentic Workflow demo for 공연 관람 준비 정보. A user
 - UI: Gradio
 - Backend: FastAPI
 - Agent workflow: LangGraph
-- Search: Tavily or Brave Search style public web search API/MCP
+- Search: KOPIS official performance data plus Tavily or Brave Search style public web search API/MCP
 - Data: file-based or in-memory venue data first, database later if needed
 - Initial venues: KSPO DOME, Blue Square, YES24 Live Hall
 
@@ -58,6 +58,12 @@ Backend API contract:
 - Request body: `{ "query": "예스24라이브홀 스탠딩" }`
 - Blank or whitespace-only `query` values are rejected before agent execution.
 - Successful guide responses follow the shared `GuideResponse` schema from `packages/domain`.
+
+Optional agent data sources:
+
+- `KOPIS_API_KEY`: enables KOPIS official performance lookup for concert/event queries.
+- `TAVILY_API_KEY` or `BRAVE_SEARCH_API_KEY`: enables public web search for venue, entry, transit, locker, and review context.
+- `GEMINI_API_KEY`: enables LLM-assisted guide drafting; deterministic fallback remains available without it.
 
 Run frontend in another terminal:
 

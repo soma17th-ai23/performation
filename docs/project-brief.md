@@ -21,6 +21,7 @@ The agent should:
 
 - classify whether the input is a concert name, venue name, or detailed question
 - query internal venue data for the MVP venue set
+- query KOPIS official performance data when a KOPIS API key is configured
 - collect public web search results through an approved search API or MCP
 - separate official information from public reviews
 - summarize location, transit, entry, locker, preparation, and practical tips
@@ -42,6 +43,7 @@ Included:
 - FastAPI agent execution API that owns workflow execution
 - LangGraph workflow inside the agent package
 - input classification for concert names, venue names, and detailed questions
+- official performance lookup through KOPIS when configured
 - public web search through Tavily, Brave Search, or equivalent MCP/API
 - local venue basics
 - source and confidence labels

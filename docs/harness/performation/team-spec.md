@@ -23,7 +23,7 @@ Reasoning:
 - current repository state
 - monorepo surfaces under `apps/frontend`, `apps/backend`, `packages/agent`, `packages/domain`, and `packages/venue-data`
 - any app code, fixture data, prompts, tests, and generated `_workspace/` handoffs
-- approved public search API or MCP configuration when search integration is implemented
+- approved KOPIS, public search API, or MCP configuration when search integration is implemented
 
 ## Outputs
 
@@ -73,7 +73,7 @@ apps/frontend -> apps/backend -> packages/agent -> packages/venue-data
 ### Phase 2: Data and Source Contract
 
 - input sources: project brief, existing venue data, planned search provider
-- actions: define local venue schema, search result shape, source categories, and confidence labels
+- actions: define local venue schema, KOPIS result shape, public search result shape, source categories, and confidence labels
 - output files: `_workspace/01_venue-data_contract.md`, `_workspace/02_source-research_evidence.md` when research is performed
 - completion criteria: downstream implementation can distinguish official data, public reviews, latest-check items, and uncertainty
 
@@ -119,6 +119,7 @@ apps/frontend -> apps/backend -> packages/agent -> packages/venue-data
 ## Failure Policy
 
 - Search API unavailable: return local venue-data guide only and mark web evidence unavailable.
+- KOPIS API unavailable or unconfigured: skip official performance lookup and continue with public search plus local venue data.
 - Sparse search results: say enough public information was not found and avoid inventing details.
 - Concert-name-only input: infer an MVP venue from public search only when exactly one supported venue is found.
 - Broad event input: when multiple regional/date candidates are found, return candidate options instead of forcing one guide.
@@ -166,6 +167,7 @@ Expected:
 - input is classified as a concert-like query with a supported venue hint
 - local venue basics are used
 - public web search is attempted if configured
+- KOPIS official performance lookup is attempted for concert/event queries if configured
 - output separates official venue/ticketing information from public blog/review tips
 - checklist includes ticket, ID if needed, battery, arrival-time check, locker availability check, transit crowding warning, and official notice check
 

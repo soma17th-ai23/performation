@@ -4,8 +4,8 @@ Keep this file short and repo-wide. Put role-specific workflow details in the ha
 
 ## What
 
-- Performation is a local Agentic Workflow demo that creates concert and venue visit-prep guides from venue data and public web information.
-- Planned stack: Gradio frontend, FastAPI backend, LangGraph workflow, Tavily or Brave Search, and file-based or in-memory venue data for the MVP.
+- Performation is a local Agentic Workflow demo that creates concert and venue visit-prep guides from venue data, KOPIS official performance data, and public web information.
+- Planned stack: Gradio frontend, FastAPI backend, LangGraph workflow, KOPIS, Tavily or Brave Search, and file-based or in-memory venue data for the MVP.
 - Application boundary: frontend calls backend API only; backend owns agent execution; agent packages must not depend on frontend or backend frameworks.
 - Canonical harness artifacts live in `docs/harness/performation/` and `.agents/skills/performation-*`.
 - Codex can discover the same workflow through `.codex/skills/`; Claude Code compatibility cards live in `.claude/agents/`.
@@ -14,7 +14,7 @@ Keep this file short and repo-wide. Put role-specific workflow details in the ha
 
 - The product promise is practical: help first-time concertgoers find entry, transit, locker, preparation, source, and official-check information without visiting many search channels manually.
 - The core safety boundary is source confidence. Official sources must be separated from public reviews, and uncertain or event-specific information must be marked as requiring latest official confirmation.
-- MVP scope is intentionally narrow: KSPO DOME, Blue Square, YES24 Live Hall, public web search, and no SNS login crawling, ticketing, payments, seat-view image collection, real-time crowding, or real-time merch stock.
+- MVP scope is intentionally narrow: KSPO DOME, Blue Square, YES24 Live Hall, KOPIS official performance lookup, public web search, and no SNS login crawling, ticketing, payments, seat-view image collection, real-time crowding, or real-time merch stock.
 
 ## How
 

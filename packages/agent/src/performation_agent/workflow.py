@@ -14,6 +14,7 @@ from performation_agent.nodes import (
   infer_event_candidates,
   infer_venue_from_search,
   load_venue_data,
+  search_kopis_official,
   search_public_web,
   summarize_information,
 )
@@ -26,6 +27,7 @@ NODE_SEQUENCE = (
   "load_venue_data",
   "build_search_queries",
   "search_public_web",
+  "search_kopis_official",
   "infer_venue_from_search",
   "infer_event_candidates",
   "extract_event_info",
@@ -48,6 +50,7 @@ def build_workflow_graph():
   graph.add_node("load_venue_data", load_venue_data)
   graph.add_node("build_search_queries", build_search_queries)
   graph.add_node("search_public_web", search_public_web)
+  graph.add_node("search_kopis_official", search_kopis_official)
   graph.add_node("infer_venue_from_search", infer_venue_from_search)
   graph.add_node("infer_event_candidates", infer_event_candidates)
   graph.add_node("extract_event_info", extract_event_info)

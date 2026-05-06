@@ -50,6 +50,7 @@ STRICT_VENUE_PATTERN = re.compile(
   re.IGNORECASE,
 )
 CONFIDENCE_PRIORITY = {
+  ConfidenceLabel.OFFICIAL_CONFIRMED: 4,
   ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED: 3,
   ConfidenceLabel.PUBLIC_REVIEW_REFERENCE: 2,
   ConfidenceLabel.UNCERTAIN: 1,
@@ -63,6 +64,7 @@ OFFICIAL_SOURCE_HINTS = (
   "ticket.melon.com",
   "tickets.interpark.com",
   "instagram.com",
+  "kopis.or.kr",
 )
 
 
@@ -340,6 +342,8 @@ def _candidate_confidence(result: SearchResult) -> ConfidenceLabel:
   text = " ".join((result["title"], result["url"], result["snippet"])).casefold()
   if any(term in text for term in PUBLIC_SOURCE_HINTS):
     return ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+  if "kopis.or.kr" in text or "kopis 공연" in text:
+    return ConfidenceLabel.OFFICIAL_CONFIRMED
   if any(term in text for term in OFFICIAL_SOURCE_HINTS):
     return ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
   if any(term in text for term in ("공식", "official", "ticket", "예매", "공지")):

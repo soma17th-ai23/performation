@@ -9,13 +9,21 @@ from performation_agent.tools.llm import (
   build_guide_draft_provider_from_env,
   generate_guide_draft_with_fallback,
 )
+from performation_agent.tools.kopis import (
+  KopisPerformanceProvider,
+  build_kopis_provider_from_env,
+  search_kopis_with_fallback,
+)
 
 __all__ = [
   "BraveSearchProvider",
   "GeminiGuideDraftProvider",
+  "KopisPerformanceProvider",
   "TavilySearchProvider",
   "build_guide_draft_provider_from_env",
+  "build_kopis_provider_from_env",
   "build_search_provider_from_env",
   "generate_guide_draft_with_fallback",
+  "search_kopis_with_fallback",
   "search_with_fallback",
 ]
