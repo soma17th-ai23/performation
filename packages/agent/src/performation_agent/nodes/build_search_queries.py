@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 from performation_agent.state import GuideState, SearchQuery
 
 
@@ -10,7 +12,6 @@ QUERY_PURPOSES = (
   ("물품보관", "locker"),
   ("준비물 팁", "preparation"),
 )
-CANDIDATE_QUERY_PURPOSE = ("일정 장소", "event_candidates")
 CANDIDATE_QUERY_INTENTS = {"venue_or_concert_name", "concert_or_event_name", "concert_detail_question"}
 
 
@@ -27,7 +28,11 @@ def build_search_queries(state: GuideState) -> GuideState:
 
 def _query_purposes(state: GuideState) -> tuple[tuple[str, str], ...]:
   if state.get("venue") is None and state.get("input_intent") in CANDIDATE_QUERY_INTENTS:
-    return (QUERY_PURPOSES[0], CANDIDATE_QUERY_PURPOSE, *QUERY_PURPOSES[1:])
+    candidate_query_purposes = (
+      (f"{date.today().year} 일정 장소", "event_candidates"),
+      (f"{date.today().year} 서울 부산 일정 장소", "event_candidates"),
+    )
+    return (QUERY_PURPOSES[0], *candidate_query_purposes, *QUERY_PURPOSES[1:])
   return QUERY_PURPOSES
 
 

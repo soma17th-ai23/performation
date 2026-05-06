@@ -1,4 +1,5 @@
 import importlib
+from datetime import date
 
 from performation_agent import generate_visit_guide
 from performation_agent.nodes.analyze_input import analyze_input
@@ -262,6 +263,7 @@ def test_infer_event_candidates_separates_venue_conflicts_and_dedupes_sources() 
 
 
 def test_infer_event_candidates_merges_empty_venue_into_named_candidate() -> None:
+  current_year = date.today().year
   result = infer_event_candidates(
     {
       "query": "랩비트 페스티벌",
@@ -269,19 +271,19 @@ def test_infer_event_candidates_merges_empty_venue_into_named_candidate() -> Non
       "input_type": "unsupported_or_ambiguous",
       "search_results": [
         {
-          "title": "랩비트 서울 2026 개최 확정",
+          "title": f"랩비트 서울 {current_year} 개최 확정",
           "url": "https://example.com/rapbeat-seoul-summary",
-          "snippet": "2026년 서울 공연 일정 안내",
+          "snippet": f"{current_year}년 서울 공연 일정 안내",
           "query": "랩비트 페스티벌 공식 정보",
         },
         {
-          "title": "RAPBEAT 2026 개최 확정",
+          "title": f"RAPBEAT {current_year} 개최 확정",
           "url": "https://example.com/rapbeat-seoul-venue",
-          "snippet": "일정 2026년 6월 20일 장소 서울 마포 문화비축기지 초호화 라인업 - 지코",
+          "snippet": f"일정 {current_year}년 6월 20일 장소 서울 마포 문화비축기지 초호화 라인업 - 지코",
           "query": "랩비트 페스티벌 일정 장소",
         },
         {
-          "title": "랩비트 부산 2026 장소: 부산항",
+          "title": f"랩비트 부산 {current_year} 장소: 부산항",
           "url": "https://example.com/rapbeat-busan",
           "snippet": "부산 공연 일정 안내",
           "query": "랩비트 페스티벌 일정 장소",
@@ -295,6 +297,177 @@ def test_infer_event_candidates_merges_empty_venue_into_named_candidate() -> Non
   assert len(seoul_candidates) == 1
   assert seoul_candidates[0].venue_name == "서울 마포 문화비축기지"
   assert len(seoul_candidates[0].sources) == 2
+
+
+def test_infer_event_candidates_prefers_current_candidates_for_yearless_query() -> None:
+  current_year = date.today().year
+  last_year = current_year - 1
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": f"워터밤 서울 {last_year} 장소는 티켓팅",
+          "url": "https://blog.example.com/waterbomb-old",
+          "snippet": "지난 후기",
+          "query": "워터밤 후기",
+        },
+        {
+          "title": f"워터밤 서울 {current_year} 개최 확정",
+          "url": "https://www.waterbombfestival.com/post/current",
+          "snippet": f"워터밤 서울은 {current_year}년 7월 24일 장소는 킨텍스 야외 글로벌 스테이지에서 진행됩니다.",
+          "query": "워터밤 공식 정보",
+        },
+        {
+          "title": f"워터밤 부산 {current_year}",
+          "url": "https://shop.waterbombfestival.com/ko/products/waterbomb-busan",
+          "snippet": "장소: 부산 엑스 더 스카이",
+          "query": "워터밤 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert [candidate.region for candidate in candidates] == ["서울", "부산"]
+  assert candidates[0].date_text == f"{current_year}년 7월 24일"
+  assert candidates[0].venue_name == "킨텍스 야외 글로벌 스테이지"
+  assert candidates[1].venue_name == "부산 엑스 더 스카이"
+  assert all(str(last_year) not in candidate.date_text for candidate in candidates)
+
+
+def test_infer_event_candidates_uses_title_region_before_address_region() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "TOUR SEOUL | WATERBOMB KOREA",
+          "url": "https://www.waterbombfestival.com/tour-seoul",
+          "snippet": "킨텍스 야외 글로벌 스테이지 경기 고양시 일산서구 킨텍스로",
+          "query": "워터밤 공식 정보",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].region == "서울"
+  assert candidates[0].name == "워터밤 서울"
+
+
+def test_infer_event_candidates_does_not_trust_public_review_venue() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 부산 2026 티켓 예매 정보",
+          "url": "https://example.com/blog/waterbomb-busan",
+          "snippet": "장소: 부산 엑스 더 스카이",
+          "query": "워터밤 일정 장소",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].confidence_label == ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+  assert candidates[0].venue_name == ""
+
+
+def test_infer_event_candidates_skips_venue_heading_noise() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "개최 장소 안내 워터밤 서울 2026의 개최 장소는 '킨텍스 야외 글로벌 스테이지'",
+          "url": "https://www.instagram.com/p/example/",
+          "snippet": "공식 공지",
+          "query": "워터밤 2026 일정 장소",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].venue_name == "킨텍스 야외 글로벌 스테이지"
+
+
+def test_infer_event_candidates_normalizes_truncated_kintex_stage() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 서울 2026 개최 장소는 '킨텍스 야외 글로벌 ...",
+          "url": "https://www.instagram.com/p/example/",
+          "snippet": "공식 공지",
+          "query": "워터밤 2026 일정 장소",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].venue_name == "킨텍스 야외 글로벌 스테이지"
+
+
+def test_infer_event_candidates_treats_tba_as_missing_venue() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 부산 2026 장소: 추후 공개",
+          "url": "https://www.waterbombfestival.com/post/current",
+          "snippet": "공식 공지",
+          "query": "워터밤 2026 일정 장소",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].venue_name == ""
+
+
+def test_infer_event_candidates_splits_region_date_pairs_from_one_source() -> None:
+  current_year = date.today().year
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": f"'워터밤 {current_year}' 서울·부산 개최 확정",
+          "url": "https://www.waterbombfestival.com/post/current",
+          "snippet": f"워터밤이 {current_year}년 여름, 서울(7월 24~26일)과 부산(8월 7~9일)에서의 국내 개최를 확정했다.",
+          "query": f"워터밤 {current_year} 서울 부산 일정 장소",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert [(candidate.region, candidate.date_text) for candidate in candidates] == [
+    ("서울", f"{current_year}년 7월 24~26일"),
+    ("부산", f"{current_year}년 8월 7~9일"),
+  ]
 
 
 def test_candidate_summary_asks_user_to_choose() -> None:
@@ -322,7 +495,7 @@ def test_candidate_summary_asks_user_to_choose() -> None:
   confidence_result = assign_confidence({**state, **candidate_result, **summary_result})
 
   assert candidate_result["input_type"] == "event_candidates"
-  assert any("여러 공연 후보" in item for item in summary_result["summary"])
+  assert any("공연 후보" in item for item in summary_result["summary"])
   assert any("후보" in item for item in confidence_result["confidence_notes"])
 
 

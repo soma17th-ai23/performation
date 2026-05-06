@@ -6,7 +6,7 @@ from performation_agent.state import GuideState
 def assign_confidence(state: GuideState) -> GuideState:
   if state.get("event_candidates") and state.get("venue") is None:
     confidence_notes = [
-      "여러 공연 후보가 확인되어 단일 공연장으로 단정하지 않았습니다.",
+      "공연 후보가 확인되어 단일 공연장으로 단정하지 않았습니다.",
       "후보별 출처와 최신 공식 공지를 확인한 뒤 하나를 선택해야 합니다.",
     ]
   elif state.get("venue") is None:
