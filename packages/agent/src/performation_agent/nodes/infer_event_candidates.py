@@ -4,6 +4,7 @@ import re
 from datetime import date
 
 from performation_agent.state import GuideState, SearchResult
+from performation_agent.tools.source_classifier import classify_social_source
 from performation_domain import ConfidenceLabel, EventCandidate, Source
 
 
@@ -274,7 +275,7 @@ def _filter_candidates(candidates: list[EventCandidate], query: str) -> list[Eve
 
 
 def _candidate_evidence_query(query: str) -> bool:
-  return "공식 정보" in query or "일정 장소" in query
+  return any(marker in query for marker in ("공식 정보", "공식 SNS 공지", "일정 장소"))
 
 
 def _drop_past_candidates_when_current_exists(candidates: list[EventCandidate]) -> list[EventCandidate]:
@@ -340,6 +341,10 @@ def _clean_venue_name(value: str) -> str:
 
 
 def _candidate_confidence(result: SearchResult) -> ConfidenceLabel:
+  social_label = classify_social_source(result)
+  if social_label is not None:
+    return social_label
+
   text = " ".join((result["title"], result["url"], result["snippet"])).casefold()
   if any(term in text for term in PUBLIC_SOURCE_HINTS):
     return ConfidenceLabel.PUBLIC_REVIEW_REFERENCE

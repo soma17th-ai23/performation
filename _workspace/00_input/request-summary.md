@@ -2,14 +2,14 @@
 
 ## Issue
 
-- GitHub issue: #24 `[agent] KOPIS 공연 공식 데이터 조회 도구 추가`
+- GitHub issue: #26 `[agent] 공개 SNS 공식 공지 출처 처리 추가`
 
 ## Scope
 
-- Add optional KOPIS official performance lookup for concert/event queries.
-- Convert KOPIS XML performance list results into existing `SearchResult` evidence.
-- Preserve Tavily/Brave public search and local venue fallback behavior when KOPIS is unconfigured or unavailable.
-- Classify KOPIS sources as `official_confirmed`.
+- Add public-search query coverage for official SNS notices.
+- Treat official SNS notice links as `latest_official_check_required` confirmation channels.
+- Keep generic SNS posts uncertain and fan/review SNS posts as `public_review_reference`.
+- Preserve the project boundary: no direct SNS login crawling or page scraping.
 - Preserve frontend -> backend -> agent dependency boundary.
 
 ## Validation Plan

@@ -44,6 +44,48 @@ def test_event_specific_information_requires_latest_official_check() -> None:
   assert "최신 공식 확인" in reason
 
 
+def test_official_sns_notice_requires_latest_official_check() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "RAPBEAT 공식 인스타그램 공지",
+      "url": "https://www.instagram.com/rapbeatfestival/p/example/",
+      "snippet": "공식 계정 공지에서 일정과 장소를 안내합니다.",
+      "query": "랩비트 페스티벌 공식 SNS 공지",
+    }
+  )
+
+  assert label == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
+  assert "SNS" in reason
+
+
+def test_unverified_sns_post_is_uncertain() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "워터밤 일정 공유",
+      "url": "https://x.com/random_account/status/1",
+      "snippet": "일정이 올라왔다는 글입니다.",
+      "query": "워터밤 공식 SNS 공지",
+    }
+  )
+
+  assert label == ConfidenceLabel.UNCERTAIN
+  assert "SNS" in reason
+
+
+def test_fan_sns_review_stays_public_reference() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "워터밤 팬 후기",
+      "url": "https://www.youtube.com/watch?v=example",
+      "snippet": "팬 브이로그와 관람 리뷰입니다.",
+      "query": "워터밤 공식 SNS 공지",
+    }
+  )
+
+  assert label == ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+  assert "참고용" in reason
+
+
 def test_unknown_source_remains_uncertain() -> None:
   label, reason = classify_search_result(
     {

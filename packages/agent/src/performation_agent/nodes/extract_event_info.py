@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from performation_agent.state import GuideState, SearchResult
+from performation_agent.tools.source_classifier import classify_social_source
 from performation_domain import ConfidenceLabel, EventInfo, Source
 
 
@@ -87,7 +88,7 @@ def _query_terms(query: str) -> list[str]:
 
 
 def _event_info_query(query: str) -> bool:
-  return any(marker in query for marker in ("공식 정보", "일정 장소"))
+  return any(marker in query for marker in ("공식 정보", "공식 SNS 공지", "일정 장소"))
 
 
 def _event_info_score(event_info: EventInfo) -> tuple[int, int, int, int]:
@@ -161,6 +162,10 @@ def _event_title(query: str, title: str) -> str:
 
 
 def _source_type(result: SearchResult) -> ConfidenceLabel:
+  social_label = classify_social_source(result)
+  if social_label is not None:
+    return social_label
+
   text = " ".join((result["title"], result["url"], result["snippet"])).casefold()
   if any(term in text for term in PUBLIC_SOURCE_HINTS):
     return ConfidenceLabel.PUBLIC_REVIEW_REFERENCE

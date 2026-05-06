@@ -3,7 +3,7 @@
 ## Commands
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 78 passed
+- `uv run --python 3.11 pytest` - pass, 84 passed
 - `git diff --check` - pass
 - `.env` loaded in-process + `generate_visit_guide("워터밤")` - pass
 - `.env` loaded in-process + FastAPI `TestClient` smoke for `/health` and `/guides` - pass
@@ -11,6 +11,7 @@
 - KOPIS key injected through hidden stdin/env + `generate_visit_guide("워터밤")` - pass
 - KOPIS canonical HTTPS endpoint smoke - pass
 - KOPIS key injected through hidden stdin/env + alias-expanded `search_kopis_with_fallback("랩비트 페스티벌")` - pass, no current KOPIS result
+- Unit scenarios for official SNS notice, generic SNS post, and fan/review SNS post classification - pass
 
 ## Scenarios
 
@@ -24,8 +25,10 @@
 | single concert | `EK 콘서트` | `concert_with_inferred_venue` + `event_info` | backend API에서 YES24 Live Hall, `2026.05.10`, `18:00` 표시 |
 | KOPIS | `EK 콘서트` | `concert_with_inferred_venue` + `event_info` | 실제 KOPIS 기준 YES24 Live Hall, `2026년 5월 10일`, `official_confirmed` |
 | KOPIS alias | `랩비트 페스티벌` | no KOPIS result | `RAPBEAT`/`RAP BEAT` alias까지 검색했지만 현재 KOPIS 공식 목록 결과 없음 |
+| SNS source | `랩비트 페스티벌 공식 SNS 공지` | `latest_official_check_required` | 공개 검색 결과의 공식 SNS 공지는 후보 추론에 사용하되 공식 확정으로 과승격하지 않음 |
 
 ## Risks
 
 - 라이브 검색 결과는 Tavily 색인 상태에 따라 후보 개수와 세부 후보명이 달라질 수 있습니다.
 - KOPIS에 없는 공연명은 기존 public search/fallback 경로에 의존합니다.
+- SNS 검색 결과는 검색 snippet 품질에 의존하므로 공식 확인 채널로만 사용합니다.

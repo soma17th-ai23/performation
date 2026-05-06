@@ -646,7 +646,7 @@ def test_extract_event_info_for_single_inferred_concert() -> None:
   assert event_info.date_text == "2026.05.10"
   assert event_info.time_text == "18:00"
   assert event_info.venue_name == "YES24 Live Hall"
-  assert event_info.confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert event_info.confidence_label == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
   assert len(event_info.sources) == 2
 
 
@@ -707,6 +707,29 @@ def test_infer_event_candidates_preserves_date_ranges() -> None:
 
   candidates = result["event_candidates"]
   assert candidates[0].date_text == f"{current_year}년 6월 20일~21일"
+
+
+def test_official_sns_notice_can_feed_event_candidates_without_overtrusting() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "랩비트 페스티벌",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "RAPBEAT 공식 인스타그램 공지: 서울 2026년 6월 20일 장소: 문화비축기지",
+          "url": "https://www.instagram.com/rapbeatfestival/p/example/",
+          "snippet": "공식 계정 공지에서 서울 공연 일정과 장소를 안내합니다.",
+          "query": "랩비트 페스티벌 공식 SNS 공지",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].region == "서울"
+  assert candidates[0].venue_name == "문화비축기지"
+  assert candidates[0].confidence_label == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
 
 
 def test_candidate_summary_asks_user_to_choose() -> None:
@@ -804,6 +827,21 @@ def test_search_queries_add_candidate_lookup_only_without_matched_venue() -> Non
 
   assert "event_candidates" in [item["purpose"] for item in unsupported_result["search_queries"]]
   assert "event_candidates" not in [item["purpose"] for item in supported_result["search_queries"]]
+
+
+def test_search_queries_include_official_sns_notice_lookup() -> None:
+  result = build_search_queries(
+    {
+      "query": "랩비트 페스티벌",
+      "input_intent": "concert_or_event_name",
+      "venue": None,
+    }
+  )
+
+  assert {
+    "query": "랩비트 페스티벌 공식 SNS 공지",
+    "purpose": "official_sns",
+  } in result["search_queries"]
 
 
 def test_classify_sources_assigns_confidence_after_search() -> None:

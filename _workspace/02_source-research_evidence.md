@@ -4,6 +4,17 @@
 
 - Inputs checked: `랩비트 페스티벌`, `워터밤`, `EK 콘서트`, KOPIS OpenAPI contract
 - Goal: verify whether generated event candidates match current public/official evidence and define KOPIS as an official performance data source.
+- SNS extension: handle official SNS notice links found through public search result metadata/snippets without direct SNS crawling.
+
+## SNS Source Contract
+
+- Search query suffix: `공식 SNS 공지`
+- Allowed input: public search result title, URL, and snippet from SNS domains.
+- Excluded input: authenticated SNS pages, comments, profile crawling, infinite scroll scraping, or login-gated content.
+- Classification:
+  - official SNS notice/account hint -> `latest_official_check_required`
+  - generic SNS post without official hint -> `uncertain`
+  - fan, vlog, review, or repost-style SNS result -> `public_review_reference`
 
 ## KOPIS Contract
 
@@ -38,3 +49,4 @@
 - KOPIS title filtering rejects short ASCII false positives such as `EK` matching inside `WEEK` or `NEKIRU`.
 - KOPIS event candidates include non-MVP regional options when official title regions are present, such as `워터밤 [속초]`.
 - KOPIS search now expands known Korean event aliases, so `랩비트` also tries `RAPBEAT`, `RAP BEAT`, `RAPBEAT FESTIVAL`, and `RAP BEAT FESTIVAL`.
+- Official SNS notice results can feed candidate/event extraction, but remain latest-check evidence instead of becoming `official_confirmed`.

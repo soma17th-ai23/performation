@@ -31,6 +31,7 @@ Use this skill for search query design, public web evidence collection, source c
 
 - Allowed: public web search through Tavily, Brave Search, or equivalent MCP/API.
 - Allowed: official venue pages, ticketing pages, public notices, public blogs, public search results.
+- Allowed: official SNS links discovered through public search result metadata/snippets, used as latest-check channels.
 - Excluded: direct crawling of X, Instagram, Threads, or login-restricted platforms.
 - Excluded: scraping copyrighted seat-view image collections for the MVP.
 
