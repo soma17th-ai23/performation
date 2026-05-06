@@ -20,10 +20,35 @@ def summarize_information(state: GuideState) -> GuideState:
 
   fallback_draft = build_deterministic_guide_draft(state)
   draft, llm_used = generate_guide_draft_with_fallback(state, fallback_draft)
+  summary = _prepend_event_info_summary(state, draft["summary"])
   return {
-    "summary": draft["summary"],
+    "summary": summary,
     "checklist": draft["checklist"],
     "transit_and_entry_tips": draft["transit_and_entry_tips"],
     "official_check_required": draft["official_check_required"],
     "llm_used": llm_used,
   }
+
+
+def _prepend_event_info_summary(state: GuideState, summary: list[str]) -> list[str]:
+  event_info = state.get("event_info")
+  if event_info is None:
+    return summary
+
+  details = [
+    item
+    for item in (
+      event_info.title,
+      event_info.date_text,
+      event_info.time_text,
+      event_info.venue_name,
+    )
+    if item
+  ]
+  if not details:
+    return summary
+
+  event_summary = "공연 정보: " + " / ".join(details)
+  if summary and summary[0] == event_summary:
+    return summary
+  return [event_summary, *summary]

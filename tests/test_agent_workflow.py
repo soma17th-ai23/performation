@@ -6,12 +6,13 @@ from performation_agent.nodes.analyze_input import analyze_input
 from performation_agent.nodes.assign_confidence import assign_confidence
 from performation_agent.nodes.build_search_queries import build_search_queries
 from performation_agent.nodes.classify_sources import classify_sources
+from performation_agent.nodes.extract_event_info import extract_event_info
 from performation_agent.nodes.infer_event_candidates import infer_event_candidates
 from performation_agent.nodes.infer_venue_from_search import infer_venue_from_search
 from performation_agent.nodes.load_venue_data import load_venue_data
 from performation_agent.nodes.summarize_information import summarize_information
 from performation_agent.workflow import NODE_SEQUENCE
-from performation_domain import ConfidenceLabel, VenueInfo
+from performation_domain import ConfidenceLabel, EventInfo, VenueInfo
 
 
 def test_workflow_has_expected_node_sequence() -> None:
@@ -22,6 +23,7 @@ def test_workflow_has_expected_node_sequence() -> None:
     "search_public_web",
     "infer_venue_from_search",
     "infer_event_candidates",
+    "extract_event_info",
     "classify_sources",
     "summarize_information",
     "assign_confidence",
@@ -470,6 +472,76 @@ def test_infer_event_candidates_splits_region_date_pairs_from_one_source() -> No
   ]
 
 
+def test_extract_event_info_for_single_inferred_concert() -> None:
+  result = extract_event_info(
+    {
+      "query": "EK 콘서트",
+      "input_intent": "concert_or_event_name",
+      "input_type": "concert_with_inferred_venue",
+      "venue": VenueInfo(name="YES24 Live Hall", aliases=["YES24 LIVE HALL", "예스24라이브홀"]),
+      "search_results": [
+        {
+          "title": "[EK 단독 콘서트 공지] EK 3rd concert '26 : you good ? EK ... - Instagram",
+          "url": "https://www.instagram.com/p/example/",
+          "snippet": "날짜 : 2026.05.10 (일) 장소 : YES24 LIVE HALL 티켓 오픈 : 2026.03.25 19:00 (수)",
+          "query": "EK 콘서트 공식 정보",
+        },
+        {
+          "title": "EK 3rd Concert : You Good? (2026.05.10) - StagePick",
+          "url": "https://www.stagepick.co.kr/performances/detail/212761",
+          "snippet": "공연 시간: 2026. 05. 10 18:00. 공연 장소. 예스24라이브홀.",
+          "query": "EK 콘서트 2026 일정 장소",
+        },
+      ],
+    }
+  )
+
+  event_info = result["event_info"]
+  assert event_info.title == "EK 3rd Concert : You Good?"
+  assert event_info.date_text == "2026.05.10"
+  assert event_info.time_text == "18:00"
+  assert event_info.venue_name == "YES24 Live Hall"
+  assert event_info.confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert len(event_info.sources) == 2
+
+
+def test_extract_event_info_keeps_matching_date_sources_only() -> None:
+  result = extract_event_info(
+    {
+      "query": "EK 콘서트",
+      "input_intent": "concert_or_event_name",
+      "input_type": "concert_with_inferred_venue",
+      "venue": VenueInfo(name="YES24 Live Hall", aliases=["YES24 LIVE HALL"]),
+      "search_results": [
+        {
+          "title": "[EK 단독 콘서트 공지] EK 3rd concert '26 : you good ? EK ... - Instagram",
+          "url": "https://www.instagram.com/p/example/",
+          "snippet": "날짜 : 2026.05.10 (일) 장소 : YES24 LIVE HALL 티켓 오픈 : 2026.03.25 19:00 (수)",
+          "query": "EK 콘서트 공식 정보",
+        },
+        {
+          "title": "EK 3rd Concert : You Good? (2026.05.10) - StagePick",
+          "url": "https://www.stagepick.co.kr/performances/detail/212761",
+          "snippet": "공연 시간: 2026. 05. 10 18:00. 공연 장소. 예스24라이브홀.",
+          "query": "EK 콘서트 2026 일정 장소",
+        },
+        {
+          "title": "EK 3rd Concert : You Good ? | YES24 LIVE HALL 날짜 및 일정",
+          "url": "https://kr.trip.com/events/EK+3rd+Concert++You+Good+-20260330/",
+          "snippet": "본 공연은 2026년 7월 20일에 YES24 LIVE HALL에서 열립니다.",
+          "query": "EK 콘서트 공식 정보",
+        },
+      ],
+    }
+  )
+
+  event_info = result["event_info"]
+  assert event_info.title == "EK 3rd Concert : You Good?"
+  assert event_info.date_text == "2026.05.10"
+  assert event_info.time_text == "18:00"
+  assert len(event_info.sources) == 2
+
+
 def test_infer_event_candidates_preserves_date_ranges() -> None:
   current_year = date.today().year
   result = infer_event_candidates(
@@ -519,6 +591,23 @@ def test_candidate_summary_asks_user_to_choose() -> None:
   assert candidate_result["input_type"] == "event_candidates"
   assert any("공연 후보" in item for item in summary_result["summary"])
   assert any("후보" in item for item in confidence_result["confidence_notes"])
+
+
+def test_summarize_information_prepends_event_info() -> None:
+  result = summarize_information(
+    {
+      "query": "EK 콘서트",
+      "venue": VenueInfo(name="YES24 Live Hall"),
+      "event_info": EventInfo(
+        title="EK 3rd Concert : You Good?",
+        date_text="2026.05.10",
+        time_text="18:00",
+        venue_name="YES24 Live Hall",
+      ),
+    }
+  )
+
+  assert result["summary"][0] == "공연 정보: EK 3rd Concert : You Good? / 2026.05.10 / 18:00 / YES24 Live Hall"
 
 
 def test_input_analysis_marks_concert_like_queries() -> None:

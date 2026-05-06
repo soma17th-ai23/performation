@@ -14,6 +14,7 @@ Generated user-facing guides should use this stable shape unless the product UI 
     "nearest_station": "",
     "transit_notes": []
   },
+  "event_info": null,
   "event_candidates": [],
   "summary": [],
   "checklist": [],
@@ -34,6 +35,7 @@ Generated user-facing guides should use this stable shape unless the product UI 
 ## Required User-Facing Sections
 
 - 공연장 기본 정보
+- 공연 정보 (when `event_info` is not null)
 - 공연 후보 (when `event_candidates` is not empty)
 - 관람 전 핵심 요약
 - 준비물 체크리스트
@@ -61,6 +63,19 @@ Generated user-facing guides should use this stable shape unless the product UI 
   "date_text": "2026년 7월",
   "venue_name": "확인 필요",
   "confidence_label": "latest_official_check_required",
+  "sources": []
+}
+```
+
+## Event Info Shape
+
+```json
+{
+  "title": "EK 3rd Concert : You Good?",
+  "date_text": "2026.05.10",
+  "time_text": "18:00",
+  "venue_name": "YES24 Live Hall",
+  "confidence_label": "official_confirmed",
   "sources": []
 }
 ```

@@ -9,6 +9,7 @@ from performation_agent.nodes import (
   assign_confidence,
   build_search_queries,
   classify_sources,
+  extract_event_info,
   format_response,
   infer_event_candidates,
   infer_venue_from_search,
@@ -27,6 +28,7 @@ NODE_SEQUENCE = (
   "search_public_web",
   "infer_venue_from_search",
   "infer_event_candidates",
+  "extract_event_info",
   "classify_sources",
   "summarize_information",
   "assign_confidence",
@@ -48,6 +50,7 @@ def build_workflow_graph():
   graph.add_node("search_public_web", search_public_web)
   graph.add_node("infer_venue_from_search", infer_venue_from_search)
   graph.add_node("infer_event_candidates", infer_event_candidates)
+  graph.add_node("extract_event_info", extract_event_info)
   graph.add_node("classify_sources", classify_sources)
   graph.add_node("summarize_information", summarize_information)
   graph.add_node("assign_confidence", assign_confidence)

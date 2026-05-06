@@ -142,6 +142,7 @@ def build_guide_prompt(state: GuideState, fallback_draft: GuideDraft) -> str:
     "input": state.get("query", ""),
     "input_type": state.get("input_type", ""),
     "venue": venue.model_dump(mode="json") if venue is not None else None,
+    "event_info": state["event_info"].model_dump(mode="json") if state.get("event_info") is not None else None,
     "classified_sources": classified_sources[:8],
     "fallback_draft": fallback_draft,
   }

@@ -26,6 +26,7 @@ def request_guide(query: str) -> str:
 
 def render_guide_markdown(guide: dict[str, Any]) -> str:
   venue = guide.get("venue") or {}
+  event_info = guide.get("event_info") or {}
   candidates = guide.get("event_candidates") or []
   sources = guide.get("sources") or []
 
@@ -37,6 +38,8 @@ def render_guide_markdown(guide: dict[str, Any]) -> str:
     f"- 공연장: {venue.get('name', '지원 범위 밖 또는 확인 필요')}",
     f"- 주소: {venue.get('address', '확인 필요')}",
     f"- 가까운 역: {venue.get('nearest_station', '확인 필요')}",
+    "",
+    *render_event_info_section(event_info),
     "",
     "## 관람 전 핵심 요약",
     *[f"- {item}" for item in guide.get("summary", [])],
@@ -63,6 +66,21 @@ def render_guide_markdown(guide: dict[str, Any]) -> str:
   ]
 
   return "\n".join(sections)
+
+
+def render_event_info_section(event_info: dict[str, Any]) -> list[str]:
+  if not event_info:
+    return []
+  rows = [
+    ("공연명", event_info.get("title", "")),
+    ("날짜", event_info.get("date_text", "")),
+    ("시간", event_info.get("time_text", "")),
+    ("장소", event_info.get("venue_name", "")),
+    ("신뢰도", event_info.get("confidence_label", "")),
+  ]
+  lines = ["## 공연 정보"]
+  lines.extend(f"- {label}: {value}" for label, value in rows if value)
+  return lines
 
 
 def render_candidate_section(candidates: list[dict[str, Any]]) -> list[str]:
