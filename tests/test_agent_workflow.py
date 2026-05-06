@@ -170,7 +170,7 @@ def test_infer_event_candidates_returns_multiple_regional_options() -> None:
   result = infer_event_candidates(
     {
       "query": "워터밤",
-      "input_intent": "concert_or_event_name",
+      "input_intent": "venue_or_concert_name",
       "input_type": "unsupported_or_ambiguous",
       "search_results": [
         {

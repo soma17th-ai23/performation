@@ -6,7 +6,7 @@ from performation_agent.state import GuideState, SearchResult
 from performation_domain import ConfidenceLabel, EventCandidate, Source
 
 
-CONCERT_INTENTS = {"concert_or_event_name", "concert_detail_question"}
+CONCERT_INTENTS = {"venue_or_concert_name", "concert_or_event_name", "concert_detail_question"}
 REGION_PATTERN = re.compile(
   r"(서울|인천|부산|대구|대전|광주|울산|수원|고양|성남|과천|춘천|강릉|청주|천안|전주|여수|창원|제주)"
 )
