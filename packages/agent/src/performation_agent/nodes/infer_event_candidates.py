@@ -34,11 +34,17 @@ def infer_event_candidates(state: GuideState) -> GuideState:
     candidate = _candidate_from_result(state["query"], result)
     if candidate is None:
       continue
-    key = (candidate.name.casefold(), candidate.region, candidate.date_text, candidate.venue_name.casefold())
-    existing = candidates_by_key.get(key)
-    if existing is None:
+    key = _candidate_key(candidate)
+    existing_key = _existing_candidate_key(candidates_by_key, candidate)
+    if existing_key is None:
       candidates_by_key[key] = candidate
     else:
+      existing = candidates_by_key[existing_key]
+      if candidate.venue_name and not existing.venue_name:
+        candidates_by_key.pop(existing_key)
+        _merge_candidate(candidate, existing)
+        candidates_by_key[key] = candidate
+        continue
       _merge_candidate(existing, candidate)
 
   candidates = list(candidates_by_key.values())
@@ -86,6 +92,25 @@ def _candidate_name(query: str, region: str) -> str:
   return f"{base_name} {region}".strip()
 
 
+def _candidate_key(candidate: EventCandidate) -> tuple[str, str, str, str]:
+  return (candidate.name.casefold(), candidate.region, candidate.date_text, candidate.venue_name.casefold())
+
+
+def _existing_candidate_key(
+  candidates_by_key: dict[tuple[str, str, str, str], EventCandidate],
+  candidate: EventCandidate,
+) -> tuple[str, str, str, str] | None:
+  key = _candidate_key(candidate)
+  if key in candidates_by_key:
+    return key
+
+  base_key = key[:3]
+  for existing_key in candidates_by_key:
+    if existing_key[:3] == base_key and (not candidate.venue_name or not existing_key[3]):
+      return existing_key
+  return None
+
+
 def _merge_candidate(existing: EventCandidate, candidate: EventCandidate) -> None:
   if CONFIDENCE_PRIORITY[candidate.confidence_label] > CONFIDENCE_PRIORITY[existing.confidence_label]:
     existing.confidence_label = candidate.confidence_label
@@ -107,7 +132,7 @@ def _venue_name(*evidence_fields: str) -> str:
 
 def _clean_venue_name(value: str) -> str:
   cleaned = value.strip(" .,/|")
-  for marker in (" 공식", " 공지", " 안내", " 일정", " 예매"):
+  for marker in (" 초호화", " 라인업", " 공식", " 공지", " 안내", " 일정", " 예매", " - "):
     cleaned = cleaned.split(marker, 1)[0]
   return cleaned.strip(" .,/|")
 

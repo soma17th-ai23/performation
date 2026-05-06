@@ -261,6 +261,42 @@ def test_infer_event_candidates_separates_venue_conflicts_and_dedupes_sources() 
   assert len(candidates[0].sources) == 1
 
 
+def test_infer_event_candidates_merges_empty_venue_into_named_candidate() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "랩비트 페스티벌",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "랩비트 서울 2026 개최 확정",
+          "url": "https://example.com/rapbeat-seoul-summary",
+          "snippet": "2026년 서울 공연 일정 안내",
+          "query": "랩비트 페스티벌 공식 정보",
+        },
+        {
+          "title": "RAPBEAT 2026 개최 확정",
+          "url": "https://example.com/rapbeat-seoul-venue",
+          "snippet": "일정 2026년 6월 20일 장소 서울 마포 문화비축기지 초호화 라인업 - 지코",
+          "query": "랩비트 페스티벌 일정 장소",
+        },
+        {
+          "title": "랩비트 부산 2026 장소: 부산항",
+          "url": "https://example.com/rapbeat-busan",
+          "snippet": "부산 공연 일정 안내",
+          "query": "랩비트 페스티벌 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  seoul_candidates = [candidate for candidate in candidates if candidate.region == "서울"]
+  assert len(seoul_candidates) == 1
+  assert seoul_candidates[0].venue_name == "서울 마포 문화비축기지"
+  assert len(seoul_candidates[0].sources) == 2
+
+
 def test_candidate_summary_asks_user_to_choose() -> None:
   state = {
     "query": "워터밤",
