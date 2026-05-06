@@ -14,7 +14,8 @@
 ## Validation
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 84 passed
+- `uv run --python 3.11 pytest` - pass, 85 passed
 - `git diff --check` - pass
 - `tests/test_source_classifier.py` covers official SNS, unverified SNS, and fan/review SNS branches.
 - `tests/test_agent_workflow.py` covers SNS query generation and candidate extraction without official overtrust.
+- PR review follow-up prevents lower-confidence SNS/review fields from filling higher-confidence event info.

@@ -88,7 +88,7 @@ def classify_search_result(result: SearchResult) -> tuple[ConfidenceLabel, str]:
   haystack = _combined_text(result)
   hostname = urlparse(result["url"]).hostname or ""
 
-  social_label = classify_social_source(result)
+  social_label = classify_social_source(result, hostname=hostname, haystack=haystack)
   if social_label == ConfidenceLabel.PUBLIC_REVIEW_REFERENCE:
     return (
       ConfidenceLabel.PUBLIC_REVIEW_REFERENCE,
@@ -126,9 +126,14 @@ def classify_search_result(result: SearchResult) -> tuple[ConfidenceLabel, str]:
   )
 
 
-def classify_social_source(result: SearchResult) -> ConfidenceLabel | None:
-  haystack = _combined_text(result)
-  hostname = urlparse(result["url"]).hostname or ""
+def classify_social_source(
+  result: SearchResult,
+  *,
+  hostname: str | None = None,
+  haystack: str | None = None,
+) -> ConfidenceLabel | None:
+  haystack = haystack if haystack is not None else _combined_text(result)
+  hostname = hostname if hostname is not None else urlparse(result["url"]).hostname or ""
   if not _matches_domain(hostname, SOCIAL_DOMAINS):
     return None
   if _contains_any(haystack, (*PUBLIC_REVIEW_HINTS, *PUBLIC_SOCIAL_HINTS)):

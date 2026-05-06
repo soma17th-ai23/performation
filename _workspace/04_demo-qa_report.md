@@ -3,7 +3,7 @@
 ## Commands
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 84 passed
+- `uv run --python 3.11 pytest` - pass, 85 passed
 - `git diff --check` - pass
 - `.env` loaded in-process + `generate_visit_guide("워터밤")` - pass
 - `.env` loaded in-process + FastAPI `TestClient` smoke for `/health` and `/guides` - pass
@@ -12,6 +12,7 @@
 - KOPIS canonical HTTPS endpoint smoke - pass
 - KOPIS key injected through hidden stdin/env + alias-expanded `search_kopis_with_fallback("랩비트 페스티벌")` - pass, no current KOPIS result
 - Unit scenarios for official SNS notice, generic SNS post, and fan/review SNS post classification - pass
+- Review regression: lower-confidence SNS/review evidence does not fill fields on higher-confidence event info - pass
 
 ## Scenarios
 

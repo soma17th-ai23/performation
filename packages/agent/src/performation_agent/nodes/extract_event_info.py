@@ -104,6 +104,9 @@ def _merge_event_info(selected_info: EventInfo, event_info: EventInfo) -> None:
   if event_info.date_text != selected_info.date_text:
     return
 
+  if SOURCE_PRIORITY[event_info.confidence_label] < SOURCE_PRIORITY[selected_info.confidence_label]:
+    return
+
   if "..." in selected_info.title and "..." not in event_info.title:
     selected_info.title = event_info.title
   if not selected_info.venue_name and event_info.venue_name:

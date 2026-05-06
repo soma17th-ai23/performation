@@ -687,6 +687,37 @@ def test_extract_event_info_keeps_matching_date_sources_only() -> None:
   assert len(event_info.sources) == 2
 
 
+def test_extract_event_info_does_not_fill_fields_from_lower_confidence_source() -> None:
+  result = extract_event_info(
+    {
+      "query": "EK 콘서트",
+      "input_intent": "concert_or_event_name",
+      "input_type": "concert_with_inferred_venue",
+      "venue": VenueInfo(name="YES24 Live Hall", aliases=["YES24 LIVE HALL", "예스24라이브홀"]),
+      "search_results": [
+        {
+          "title": "EK 3rd Concert: You Good? - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF288047",
+          "snippet": "공식 KOPIS 공연 데이터. 공연명 EK 3rd Concert: You Good?. 공연기간 2026년 5월 10일. 공연장소 예스24라이브홀.",
+          "query": "EK 콘서트 KOPIS 공식 정보 일정 장소",
+        },
+        {
+          "title": "EK 콘서트 관람 후기",
+          "url": "https://example.tistory.com/ek-review",
+          "snippet": "2026.05.10 18:00 공연으로 기억합니다. 예스24라이브홀 후기입니다.",
+          "query": "EK 콘서트 공식 SNS 공지",
+        },
+      ],
+    }
+  )
+
+  event_info = result["event_info"]
+  assert event_info.confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert event_info.date_text == "2026년 5월 10일"
+  assert event_info.time_text == ""
+  assert len(event_info.sources) == 1
+
+
 def test_infer_event_candidates_preserves_date_ranges() -> None:
   current_year = date.today().year
   result = infer_event_candidates(
