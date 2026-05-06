@@ -50,6 +50,15 @@ Run backend:
 PYTHONPATH=apps/backend/src:packages/agent/src:packages/domain/src:packages/venue-data/src uv run --python 3.11 uvicorn performation_backend.main:app --reload
 ```
 
+Backend API contract:
+
+- `GET /health`: health check.
+- `POST /guides`: canonical guide generation endpoint.
+- `POST /analyze`: compatibility alias for backlog and frontend integration discussions.
+- Request body: `{ "query": "예스24라이브홀 스탠딩" }`
+- Blank or whitespace-only `query` values are rejected before agent execution.
+- Successful guide responses follow the shared `GuideResponse` schema from `packages/domain`.
+
 Run frontend in another terminal:
 
 ```bash

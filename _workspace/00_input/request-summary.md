@@ -2,13 +2,13 @@
 
 ## Issue
 
-- GitHub issue: #16 `[agent] 공연 후보 다중 추론 및 선택 요청 응답 지원`
+- GitHub issue: #22 `[backend] /analyze 호환 엔드포인트와 입력 검증 추가`
 
 ## Scope
 
-- Add search-based event candidate options for broad concert/festival inputs.
-- Return multiple regional/date candidates instead of forcing a single venue guide.
-- Keep ticketing/payment/action execution out of scope.
+- Keep `POST /guides` as the canonical guide generation endpoint.
+- Add `POST /analyze` as a compatibility alias for backlog and frontend integration discussions.
+- Normalize request `query` values before agent execution and reject blank or whitespace-only input.
 - Preserve frontend -> backend -> agent dependency boundary.
 
 ## Validation Plan
