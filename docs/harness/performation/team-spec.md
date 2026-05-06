@@ -120,6 +120,7 @@ apps/frontend -> apps/backend -> packages/agent -> packages/venue-data
 
 - Search API unavailable: return local venue-data guide only and mark web evidence unavailable.
 - Sparse search results: say enough public information was not found and avoid inventing details.
+- Concert-name-only input: infer an MVP venue from public search only when exactly one supported venue is found.
 - Official/public conflict: prefer official sources; keep public reviews as anecdotal reference.
 - Ambiguous input: ask for venue name, event date, artist, or ticketing page only when a reasonable assumption would be risky.
 - Review failure: apply one bounded fix loop, then report unresolved risks instead of repeatedly rewriting.

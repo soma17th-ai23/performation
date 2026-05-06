@@ -2,22 +2,20 @@
 
 ## Issue
 
-- #12 `[agent] 공연명 입력 분석 및 공연장 추론 개선`
+- #14 `[agent] 공연명 단독 입력 검색 기반 공연장 추론`
 
 ## Changes
 
-- Added concert-like input intent detection in the agent analysis node.
-- Added normalized venue alias matching for compact or spaced hints.
-- Added `concert_with_venue_hint` output contract and scenario S10.
-- Preserved ambiguous fallback when a concert query has no supported venue hint.
-- Added workflow and venue-data tests for venue aliases and concert-name inputs.
-- Addressed PR review feedback for normalized keyword matching, alias index reuse, generic alias safety, concert-detail input typing, and multi-venue ambiguity coverage.
+- Added `infer_venue_from_search` after public web search.
+- Added `concert_with_inferred_venue` output contract and scenario S11.
+- Infers an MVP venue from search results only when exactly one supported venue appears.
+- Preserves ambiguous fallback when search results contain no MVP venue or multiple MVP venues.
+- Added workflow tests for single-venue and multi-venue search inference.
 
 ## Validation
 
 - `python3 scripts/validate_harness.py`
 - `uv run --python 3.11 pytest`
 - Manual smoke:
-  - `예스24라이브홀` -> `venue_name`, `YES24 Live Hall`
-  - `아이유 콘서트 KSPO` -> `concert_with_venue_hint`, `KSPO DOME`
-  - `아이유 콘서트 티켓팅` -> `unsupported_or_ambiguous`, no venue
+  - `아이유 콘서트` + search result mentioning `KSPO DOME` -> `concert_with_inferred_venue`
+  - `아이유 콘서트` + search results mentioning `KSPO DOME` and `Blue Square` -> ambiguous

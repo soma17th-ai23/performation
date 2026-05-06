@@ -46,6 +46,7 @@ Generated user-facing guides should use this stable shape unless the product UI 
 | `venue_name` | supported MVP venue name or alias |
 | `venue_with_detail_question` | supported venue plus a detail question such as entry, standing, transit, locker, or preparation |
 | `concert_with_venue_hint` | concert-like input that includes a supported venue alias or hint |
+| `concert_with_inferred_venue` | concert-like input where a single supported venue was inferred from public search results |
 | `unsupported_or_ambiguous` | no supported venue can be inferred safely |
 
 ## Source Types

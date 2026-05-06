@@ -2,13 +2,13 @@
 
 ## Issue
 
-- GitHub issue: #12 `[agent] 공연명 입력 분석 및 공연장 추론 개선`
+- GitHub issue: #14 `[agent] 공연명 단독 입력 검색 기반 공연장 추론`
 
 ## Scope
 
-- Improve agent-side input analysis for concert-like queries.
-- Infer MVP venues from venue aliases and compact hints such as `KSPO`.
-- Keep unsupported concert names ambiguous when no supported venue hint exists.
+- Improve agent-side venue inference for concert-name-only queries.
+- Infer an MVP venue from public search results only when exactly one supported venue appears.
+- Keep unsupported or multi-venue search evidence ambiguous.
 - Preserve frontend -> backend -> agent dependency boundary.
 
 ## Validation Plan
