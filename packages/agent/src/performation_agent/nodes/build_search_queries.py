@@ -5,22 +5,30 @@ from performation_agent.state import GuideState, SearchQuery
 
 QUERY_PURPOSES = (
   ("공식 정보", "official"),
-  ("일정 장소", "event_candidates"),
   ("입장 정보", "entry"),
   ("교통 정보", "transit"),
   ("물품보관", "locker"),
   ("준비물 팁", "preparation"),
 )
+CANDIDATE_QUERY_PURPOSE = ("일정 장소", "event_candidates")
+CANDIDATE_QUERY_INTENTS = {"venue_or_concert_name", "concert_or_event_name", "concert_detail_question"}
 
 
 def build_search_queries(state: GuideState) -> GuideState:
   base_query = _build_base_query(state)
+  query_purposes = _query_purposes(state)
   queries: list[SearchQuery] = [
     {"query": f"{base_query} {query_suffix}", "purpose": purpose}
-    for query_suffix, purpose in QUERY_PURPOSES
+    for query_suffix, purpose in query_purposes
   ]
 
   return {"search_queries": queries}
+
+
+def _query_purposes(state: GuideState) -> tuple[tuple[str, str], ...]:
+  if state.get("venue") is None and state.get("input_intent") in CANDIDATE_QUERY_INTENTS:
+    return (QUERY_PURPOSES[0], CANDIDATE_QUERY_PURPOSE, *QUERY_PURPOSES[1:])
+  return QUERY_PURPOSES
 
 
 def _build_base_query(state: GuideState) -> str:

@@ -197,6 +197,70 @@ def test_infer_event_candidates_returns_multiple_regional_options() -> None:
   assert candidates[0].sources
 
 
+def test_infer_event_candidates_detects_full_dates_and_sejong() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 세종 2026년 7월 10일 장소: 세종호수공원",
+          "url": "https://example.com/waterbomb-sejong",
+          "snippet": "세종 공연 일정과 장소 안내",
+          "query": "워터밤 일정 장소",
+        },
+        {
+          "title": "워터밤 서울 8월 3일 장소: 한강공원",
+          "url": "https://example.com/waterbomb-seoul",
+          "snippet": "서울 공연 일정과 장소 안내",
+          "query": "워터밤 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].region == "세종"
+  assert candidates[0].date_text == "2026년 7월 10일"
+  assert candidates[1].date_text == "8월 3일"
+
+
+def test_infer_event_candidates_separates_venue_conflicts_and_dedupes_sources() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 서울 2026년 7월 10일 장소: 킨텍스",
+          "url": "https://example.com/waterbomb-seoul-k",
+          "snippet": "일정과 장소 안내",
+          "query": "워터밤 일정 장소",
+        },
+        {
+          "title": "워터밤 서울 2026년 7월 10일 장소: 킨텍스 공식 공지",
+          "url": "https://example.com/waterbomb-seoul-k",
+          "snippet": "공식 공지 기준으로 최신 확인이 필요합니다.",
+          "query": "워터밤 공식 정보",
+        },
+        {
+          "title": "워터밤 서울 2026년 7월 10일 장소: 올림픽공원",
+          "url": "https://example.com/waterbomb-seoul-o",
+          "snippet": "다른 장소 후보 안내",
+          "query": "워터밤 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert [candidate.venue_name for candidate in candidates] == ["킨텍스", "올림픽공원"]
+  assert candidates[0].confidence_label == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
+  assert len(candidates[0].sources) == 1
+
+
 def test_candidate_summary_asks_user_to_choose() -> None:
   state = {
     "query": "워터밤",
@@ -255,6 +319,26 @@ def test_search_queries_use_inferred_venue_and_original_concert_query() -> None:
   assert venue_state["matched_venue_alias"] == "KSPO"
   assert all("KSPO DOME" in query for query in queries)
   assert all("아이유 콘서트 KSPO" in query for query in queries)
+
+
+def test_search_queries_add_candidate_lookup_only_without_matched_venue() -> None:
+  unsupported_result = build_search_queries(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "venue": None,
+    }
+  )
+  supported_result = build_search_queries(
+    {
+      "query": "아이유 콘서트 KSPO",
+      "input_intent": "concert_or_event_name",
+      "venue": VenueInfo(name="KSPO DOME"),
+    }
+  )
+
+  assert "event_candidates" in [item["purpose"] for item in unsupported_result["search_queries"]]
+  assert "event_candidates" not in [item["purpose"] for item in supported_result["search_queries"]]
 
 
 def test_classify_sources_assigns_confidence_after_search() -> None:
