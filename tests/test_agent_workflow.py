@@ -63,7 +63,7 @@ def test_search_kopis_official_merges_official_results() -> None:
   )
 
   assert len(result["search_results"]) == 2
-  assert result["search_results"][1]["title"].endswith("KOPIS 공연 공식 데이터")
+  assert result["search_results"][0]["title"].endswith("KOPIS 공연 공식 데이터")
   assert result["fallback_used"] is False
 
 

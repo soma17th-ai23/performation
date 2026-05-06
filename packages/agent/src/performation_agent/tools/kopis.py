@@ -2,22 +2,25 @@ from __future__ import annotations
 
 import os
 import re
-import xml.etree.ElementTree as ET
 from collections.abc import Mapping
 from datetime import date, timedelta
 from typing import Protocol
 
 import httpx
+from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
 
 from performation_agent.state import SearchResult
 
 
-KOPIS_PERFORMANCE_LIST_URL = "http://www.kopis.or.kr/openApi/restful/pblprfr"
+KOPIS_PERFORMANCE_LIST_URL = "https://kopis.or.kr/openApi/restful/pblprfr"
 KOPIS_PERFORMANCE_PAGE_URL = "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id={performance_id}"
 DEFAULT_KOPIS_TIMEOUT_SECONDS = 10.0
 DEFAULT_KOPIS_LOOKAHEAD_DAYS = 120
 DEFAULT_KOPIS_ROWS = 10
+MAX_KOPIS_LOOKAHEAD_DAYS = 365
 MAX_KOPIS_WINDOW_DAYS = 31
+MAX_KOPIS_RESPONSE_BYTES = 2_000_000
 GENERIC_TERMS = ("콘서트", "공연", "페스티벌", "일정", "장소", "정보", "티켓", "예매", "준비물", "스탠딩")
 
 
@@ -59,6 +62,8 @@ class KopisPerformanceProvider:
     for start, end in _date_windows(self._start_date, self._lookahead_days):
       response = self._get(client, search_term=search_term, start=start, end=end)
       response.raise_for_status()
+      if len(response.content) > MAX_KOPIS_RESPONSE_BYTES:
+        raise ValueError("KOPIS response is too large")
       results.extend(_normalize_kopis_results(response.text, query=query))
     return _dedupe_results(results)
 
@@ -88,7 +93,7 @@ def search_kopis_with_fallback(
 
   try:
     return selected_provider.search_performances(query)
-  except (httpx.HTTPError, ET.ParseError, ValueError):
+  except (httpx.HTTPError, ET.ParseError, DefusedXmlException, ValueError):
     return []
 
 
@@ -100,7 +105,13 @@ def build_kopis_provider_from_env(env: Mapping[str, str] | None = None) -> Kopis
   return KopisPerformanceProvider(
     api_key,
     timeout_seconds=_float_env(values, "PERFORMATION_KOPIS_TIMEOUT_SECONDS", DEFAULT_KOPIS_TIMEOUT_SECONDS),
-    lookahead_days=_int_env(values, "PERFORMATION_KOPIS_LOOKAHEAD_DAYS", DEFAULT_KOPIS_LOOKAHEAD_DAYS, minimum=1),
+    lookahead_days=_int_env(
+      values,
+      "PERFORMATION_KOPIS_LOOKAHEAD_DAYS",
+      DEFAULT_KOPIS_LOOKAHEAD_DAYS,
+      minimum=1,
+      maximum=MAX_KOPIS_LOOKAHEAD_DAYS,
+    ),
     rows=_int_env(values, "PERFORMATION_KOPIS_ROWS", DEFAULT_KOPIS_ROWS, minimum=1, maximum=100),
   )
 

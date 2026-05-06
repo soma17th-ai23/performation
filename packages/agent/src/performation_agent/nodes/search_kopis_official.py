@@ -24,8 +24,8 @@ def search_kopis_official(
   if not kopis_results:
     return {}
 
-  combined_results = [*state.get("search_results", []), *kopis_results]
+  combined_results = [*kopis_results, *state.get("search_results", [])]
   return {
     "search_results": combined_results,
-    "fallback_used": not combined_results,
+    "fallback_used": False,
   }

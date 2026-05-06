@@ -3,12 +3,13 @@
 ## Commands
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 77 passed
+- `uv run --python 3.11 pytest` - pass, 78 passed
 - `git diff --check` - pass
 - `.env` loaded in-process + `generate_visit_guide("워터밤")` - pass
 - `.env` loaded in-process + FastAPI `TestClient` smoke for `/health` and `/guides` - pass
 - KOPIS key injected through hidden stdin/env + `generate_visit_guide("EK 콘서트")` - pass
 - KOPIS key injected through hidden stdin/env + `generate_visit_guide("워터밤")` - pass
+- KOPIS canonical HTTPS endpoint smoke - pass
 
 ## Scenarios
 

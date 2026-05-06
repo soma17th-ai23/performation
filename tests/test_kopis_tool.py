@@ -29,6 +29,18 @@ def test_build_kopis_provider_from_env_uses_api_key() -> None:
   assert isinstance(provider, KopisPerformanceProvider)
 
 
+def test_build_kopis_provider_from_env_caps_lookahead_days() -> None:
+  provider = build_kopis_provider_from_env(
+    {
+      "KOPIS_API_KEY": "kopis-key",
+      "PERFORMATION_KOPIS_LOOKAHEAD_DAYS": "9999",
+    }
+  )
+
+  assert isinstance(provider, KopisPerformanceProvider)
+  assert provider._lookahead_days == 365
+
+
 def test_kopis_provider_normalizes_performance_list_xml() -> None:
   def handler(request: httpx.Request) -> httpx.Response:
     assert str(request.url).startswith(KOPIS_PERFORMANCE_LIST_URL)

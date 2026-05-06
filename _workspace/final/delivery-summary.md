@@ -13,11 +13,12 @@
 - Documented KOPIS env settings and updated harness/project docs to include official performance lookup.
 - Filtered KOPIS short-term false positives so `EK` does not match unrelated titles like `WEEK` or `NEKIRU`.
 - Expanded official event candidates to include non-MVP regions from KOPIS, verified with `워터밤 서울` and `워터밤 속초`.
+- Addressed PR review feedback by using canonical HTTPS KOPIS transport, bounding lookahead days, hardening XML parsing, and prioritizing KOPIS evidence before public search results.
 
 ## Validation
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 77 passed
+- `uv run --python 3.11 pytest` - pass, 78 passed
 - `git diff --check` - pass
 - Manual smoke:
   - KOPIS key injected through hidden stdin/env + `generate_visit_guide("EK 콘서트")` returned YES24 Live Hall, `2026년 5월 10일`, `official_confirmed`
