@@ -21,6 +21,7 @@ KOREAN_REGIONS = (
   "고양",
   "성남",
   "과천",
+  "속초",
   "춘천",
   "강릉",
   "청주",
@@ -42,11 +43,11 @@ DATE_RANGE_PATTERNS = (
 REGION_DATE_PAIR_PATTERN = re.compile(r"(" + "|".join(KOREAN_REGIONS) + r")\s*\(([^)]*(?:월|일)[^)]*)\)")
 YEAR_PATTERN = re.compile(r"(20\d{2})")
 VENUE_PATTERN = re.compile(
-  r"(?:장소|venue|공연장)(?:은|는|이|가)?[:：]?\s*([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-]{1,40})",
+  r"(?:공연\s*장소|공연장|장소|venue)(?:은|는|이|가)?[:：]?\s*([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-\[\]]{1,40})",
   re.IGNORECASE,
 )
 STRICT_VENUE_PATTERN = re.compile(
-  r"(?:장소|venue|공연장)(?:은|는|이|가|[:：])+\s*['\"]?([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-]{1,40})",
+  r"(?:공연\s*장소|공연장|장소|venue)(?:은|는|이|가|[:：])+\s*['\"]?([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s&+\-\[\]]{1,40})",
   re.IGNORECASE,
 )
 CONFIDENCE_PRIORITY = {

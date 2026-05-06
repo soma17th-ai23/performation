@@ -113,6 +113,8 @@ def _normalize_kopis_results(payload: str, *, query: str) -> list[SearchResult]:
     title = _text(item, "prfnm")
     if not performance_id or not title:
       continue
+    if not _matches_query_title(title, query):
+      continue
     results.append(
       {
         "title": f"{title} - KOPIS 공연 공식 데이터",
@@ -157,6 +159,23 @@ def _search_term(query: str) -> str:
     normalized = normalized.replace(term, " ")
   normalized = re.sub(r"\s+", " ", normalized).strip()
   return normalized if len(normalized) >= 2 else ""
+
+
+def _matches_query_title(title: str, query: str) -> bool:
+  search_term = _search_term(query)
+  if not search_term:
+    return False
+
+  normalized_title = title.casefold()
+  terms = [term for term in search_term.split() if term]
+  return all(_term_in_title(term, normalized_title) for term in terms)
+
+
+def _term_in_title(term: str, normalized_title: str) -> bool:
+  normalized_term = term.casefold()
+  if re.fullmatch(r"[a-z0-9]{2,3}", normalized_term):
+    return re.search(rf"(?<![a-z0-9]){re.escape(normalized_term)}(?![a-z0-9])", normalized_title) is not None
+  return normalized_term in normalized_title
 
 
 def _text(item: ET.Element, tag: str) -> str:

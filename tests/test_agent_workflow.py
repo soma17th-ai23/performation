@@ -119,6 +119,38 @@ def test_kopis_candidate_uses_official_confidence() -> None:
   )
 
   assert result["event_candidates"][0].confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert result["event_candidates"][0].venue_name == "킨텍스 야외 글로벌 스테이지"
+
+
+def test_kopis_candidates_include_non_mvp_regional_options() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 [서울] - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF284703",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 7월 24일~26일. 공연장소 킨텍스. 지역 경기도.",
+          "query": "워터밤 KOPIS 공식 정보 일정 장소",
+        },
+        {
+          "title": "워터밤 [속초] - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF284704",
+          "snippet": "공식 KOPIS 공연 데이터. 공연기간 2026년 8월 22일. 공연장소 한화리조트 [설악 쏘라노]. 지역 강원특별자치도.",
+          "query": "워터밤 KOPIS 공식 정보 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert [(candidate.region, candidate.venue_name) for candidate in candidates] == [
+    ("서울", "킨텍스"),
+    ("속초", "한화리조트 [설악 쏘라노]"),
+  ]
+  assert all(candidate.confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED for candidate in candidates)
 
 
 def test_kopis_event_info_uses_official_confidence() -> None:
@@ -139,6 +171,7 @@ def test_kopis_event_info_uses_official_confidence() -> None:
   )
 
   assert result["event_info"].confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert result["event_info"].date_text == "2026년 5월 10일"
 
 
 def test_supported_venue_returns_fallback_guide() -> None:

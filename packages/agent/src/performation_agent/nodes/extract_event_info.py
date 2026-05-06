@@ -126,7 +126,10 @@ def _date_text(evidence_text: str) -> str:
 
 
 def _normalize_date(value: str) -> str:
-  return re.sub(r"\s+", "", value).replace(".", ".").strip(".")
+  normalized = re.sub(r"\s+", " ", value).strip()
+  if "년" in normalized:
+    return normalized
+  return re.sub(r"\s*[.]\s*", ".", normalized).strip(".")
 
 
 def _time_text(evidence_text: str) -> str:

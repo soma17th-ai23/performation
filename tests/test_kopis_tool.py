@@ -42,11 +42,31 @@ def test_kopis_provider_normalizes_performance_list_xml() -> None:
       text="""
       <dbs>
         <db>
+          <mt20id>PF111111</mt20id>
+          <prfnm>BELLEFORET WEEK: MY VOLUME [증평]</prfnm>
+          <prfpdfrom>2026.06.06</prfpdfrom>
+          <prfpdto>2026.06.06</prfpdto>
+          <fcltynm>벨포레 리조트</fcltynm>
+          <area>충청북도</area>
+          <genrenm>대중음악</genrenm>
+          <prfstate>공연예정</prfstate>
+        </db>
+        <db>
           <mt20id>PF999999</mt20id>
           <prfnm>EK 3rd Concert : You Good?</prfnm>
           <prfpdfrom>2026.05.10</prfpdfrom>
           <prfpdto>2026.05.10</prfpdto>
           <fcltynm>예스24라이브홀</fcltynm>
+          <area>서울특별시</area>
+          <genrenm>대중음악</genrenm>
+          <prfstate>공연예정</prfstate>
+        </db>
+        <db>
+          <mt20id>PF222222</mt20id>
+          <prfnm>Unlock: NEKIRU New Member Debut</prfnm>
+          <prfpdfrom>2026.05.29</prfpdfrom>
+          <prfpdto>2026.05.29</prfpdto>
+          <fcltynm>세티 라이브홀</fcltynm>
           <area>서울특별시</area>
           <genrenm>대중음악</genrenm>
           <prfstate>공연예정</prfstate>

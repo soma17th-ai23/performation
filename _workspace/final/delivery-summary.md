@@ -11,10 +11,15 @@
 - Added a `search_kopis_official` workflow node after public web search.
 - Classified KOPIS evidence as `official_confirmed` for source, event info, and candidate flows.
 - Documented KOPIS env settings and updated harness/project docs to include official performance lookup.
+- Filtered KOPIS short-term false positives so `EK` does not match unrelated titles like `WEEK` or `NEKIRU`.
+- Expanded official event candidates to include non-MVP regions from KOPIS, verified with `워터밤 서울` and `워터밤 속초`.
 
 ## Validation
 
-- `python3 scripts/validate_harness.py`
-- `uv run --python 3.11 pytest`
+- `python3 scripts/validate_harness.py` - pass
+- `uv run --python 3.11 pytest` - pass, 77 passed
+- `git diff --check` - pass
 - Manual smoke:
-  - no `KOPIS_API_KEY` configured locally, so the agent skips KOPIS and continues with existing search/fallback behavior
+  - KOPIS key injected through hidden stdin/env + `generate_visit_guide("EK 콘서트")` returned YES24 Live Hall, `2026년 5월 10일`, `official_confirmed`
+  - KOPIS key injected through hidden stdin/env + `generate_visit_guide("워터밤")` returned 서울/속초 official candidates
+  - `랩비트 페스티벌` returned no KOPIS result, so it remains covered by public search/fallback behavior
