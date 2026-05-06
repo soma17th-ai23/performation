@@ -19,14 +19,6 @@ def health() -> dict[str, str]:
 
 
 @app.post("/guides", response_model=GuideResponse)
-def create_guide(request: GuideRequest) -> GuideResponse:
-  return _run_guide_workflow(request)
-
-
 @app.post("/analyze", response_model=GuideResponse)
-def analyze_guide(request: GuideRequest) -> GuideResponse:
-  return _run_guide_workflow(request)
-
-
-def _run_guide_workflow(request: GuideRequest) -> GuideResponse:
+def create_guide(request: GuideRequest) -> GuideResponse:
   return generate_visit_guide(request.query)
