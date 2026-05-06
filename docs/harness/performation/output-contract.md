@@ -14,6 +14,8 @@ Generated user-facing guides should use this stable shape unless the product UI 
     "nearest_station": "",
     "transit_notes": []
   },
+  "event_info": null,
+  "event_candidates": [],
   "summary": [],
   "checklist": [],
   "transit_and_entry_tips": [],
@@ -33,6 +35,8 @@ Generated user-facing guides should use this stable shape unless the product UI 
 ## Required User-Facing Sections
 
 - 공연장 기본 정보
+- 공연 정보 (when `event_info` is not null)
+- 공연 후보 (when `event_candidates` is not empty)
 - 관람 전 핵심 요약
 - 준비물 체크리스트
 - 교통 및 입장 팁
@@ -47,7 +51,34 @@ Generated user-facing guides should use this stable shape unless the product UI 
 | `venue_with_detail_question` | supported venue plus a detail question such as entry, standing, transit, locker, or preparation |
 | `concert_with_venue_hint` | concert-like input that includes a supported venue alias or hint |
 | `concert_with_inferred_venue` | concert-like input where a single supported venue was inferred from public search results |
+| `event_candidates` | broad or ambiguous event input where multiple event candidates should be offered for user selection |
 | `unsupported_or_ambiguous` | no supported venue can be inferred safely |
+
+## Event Candidate Shape
+
+```json
+{
+  "name": "워터밤 서울",
+  "region": "서울",
+  "date_text": "2026년 7월",
+  "venue_name": "확인 필요",
+  "confidence_label": "latest_official_check_required",
+  "sources": []
+}
+```
+
+## Event Info Shape
+
+```json
+{
+  "title": "EK 3rd Concert : You Good?",
+  "date_text": "2026.05.10",
+  "time_text": "18:00",
+  "venue_name": "YES24 Live Hall",
+  "confidence_label": "official_confirmed",
+  "sources": []
+}
+```
 
 ## Source Types
 

@@ -26,6 +26,8 @@ def request_guide(query: str) -> str:
 
 def render_guide_markdown(guide: dict[str, Any]) -> str:
   venue = guide.get("venue") or {}
+  event_info = guide.get("event_info") or {}
+  candidates = guide.get("event_candidates") or []
   sources = guide.get("sources") or []
 
   sections = [
@@ -37,8 +39,12 @@ def render_guide_markdown(guide: dict[str, Any]) -> str:
     f"- 주소: {venue.get('address', '확인 필요')}",
     f"- 가까운 역: {venue.get('nearest_station', '확인 필요')}",
     "",
+    *render_event_info_section(event_info),
+    "",
     "## 관람 전 핵심 요약",
     *[f"- {item}" for item in guide.get("summary", [])],
+    "",
+    *render_candidate_section(candidates),
     "",
     "## 준비물 체크리스트",
     *[f"- [ ] {item}" for item in guide.get("checklist", [])],
@@ -62,6 +68,42 @@ def render_guide_markdown(guide: dict[str, Any]) -> str:
   return "\n".join(sections)
 
 
+def render_event_info_section(event_info: dict[str, Any]) -> list[str]:
+  if not event_info:
+    return []
+  rows = [
+    ("공연명", event_info.get("title", "")),
+    ("날짜", event_info.get("date_text", "")),
+    ("시간", event_info.get("time_text", "")),
+    ("장소", event_info.get("venue_name", "")),
+    ("신뢰도", event_info.get("confidence_label", "")),
+  ]
+  lines = ["## 공연 정보"]
+  lines.extend(f"- {label}: {value}" for label, value in rows if value)
+  return lines
+
+
+def render_candidate_section(candidates: list[dict[str, Any]]) -> list[str]:
+  if not candidates:
+    return []
+  lines = ["## 공연 후보"]
+  for candidate in candidates:
+    meta = " / ".join(
+      item
+      for item in (
+        candidate.get("region", ""),
+        candidate.get("date_text", ""),
+        candidate.get("venue_name", ""),
+      )
+      if item
+    )
+    label = candidate.get("name", "후보")
+    confidence = candidate.get("confidence_label", "uncertain")
+    suffix = f" - {meta}" if meta else ""
+    lines.append(f"- {label}{suffix} ({confidence})")
+  return lines
+
+
 def build_app() -> gr.Blocks:
   with gr.Blocks(title="Performation") as demo:
     gr.Markdown("# Performation")
@@ -78,4 +120,3 @@ def build_app() -> gr.Blocks:
 
 if __name__ == "__main__":
   build_app().launch()
-

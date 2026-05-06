@@ -9,6 +9,8 @@ def format_response(state: GuideState) -> GuideState:
     input=state["query"],
     input_type=state["input_type"],
     venue=state.get("venue"),
+    event_info=state.get("event_info"),
+    event_candidates=state.get("event_candidates", []),
     summary=state.get("summary", []),
     checklist=state.get("checklist", []),
     transit_and_entry_tips=state.get("transit_and_entry_tips", []),

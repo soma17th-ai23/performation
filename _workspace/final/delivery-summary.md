@@ -2,20 +2,19 @@
 
 ## Issue
 
-- #14 `[agent] 공연명 단독 입력 검색 기반 공연장 추론`
+- #16 `[agent] 공연 후보 다중 추론 및 선택 요청 응답 지원`
 
 ## Changes
 
-- Added `infer_venue_from_search` after public web search.
-- Added `concert_with_inferred_venue` output contract and scenario S11.
-- Infers an MVP venue from search results only when exactly one supported venue appears.
-- Preserves ambiguous fallback when search results contain no MVP venue or multiple MVP venues.
-- Added workflow tests for single-venue and multi-venue search inference.
+- Added `event_candidates` to the shared response contract.
+- Added `infer_event_candidates` to produce regional/date options for broad event inputs.
+- Added `event_candidates` input type and S12 scenario.
+- Updated the Gradio renderer to show candidate options when present.
+- Kept user-facing wording focused on selection and official confirmation, without exposing local-data internals.
 
 ## Validation
 
 - `python3 scripts/validate_harness.py`
 - `uv run --python 3.11 pytest`
 - Manual smoke:
-  - `아이유 콘서트` + search result mentioning `KSPO DOME` -> `concert_with_inferred_venue`
-  - `아이유 콘서트` + search results mentioning `KSPO DOME` and `Blue Square` -> ambiguous
+  - `워터밤` + Seoul/Incheon search results -> `event_candidates`

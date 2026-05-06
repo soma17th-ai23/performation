@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from performation_domain import GuideResponse, Source, VenueInfo
+from performation_domain import EventCandidate, EventInfo, GuideResponse, Source, VenueInfo
 
 
 class SearchQuery(TypedDict):
@@ -38,6 +38,8 @@ class GuideState(TypedDict, total=False):
   matched_venue_alias: str | None
   venue_inference_source: str | None
   venue: VenueInfo | None
+  event_info: EventInfo | None
+  event_candidates: list[EventCandidate]
   search_queries: list[SearchQuery]
   search_results: list[SearchResult]
   classified_sources: list[ClassifiedSource]
