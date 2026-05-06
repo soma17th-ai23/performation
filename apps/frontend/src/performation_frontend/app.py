@@ -26,6 +26,7 @@ def request_guide(query: str) -> str:
 
 def render_guide_markdown(guide: dict[str, Any]) -> str:
   venue = guide.get("venue") or {}
+  candidates = guide.get("event_candidates") or []
   sources = guide.get("sources") or []
 
   sections = [
@@ -39,6 +40,8 @@ def render_guide_markdown(guide: dict[str, Any]) -> str:
     "",
     "## 관람 전 핵심 요약",
     *[f"- {item}" for item in guide.get("summary", [])],
+    "",
+    *render_candidate_section(candidates),
     "",
     "## 준비물 체크리스트",
     *[f"- [ ] {item}" for item in guide.get("checklist", [])],
@@ -62,6 +65,27 @@ def render_guide_markdown(guide: dict[str, Any]) -> str:
   return "\n".join(sections)
 
 
+def render_candidate_section(candidates: list[dict[str, Any]]) -> list[str]:
+  if not candidates:
+    return []
+  lines = ["## 공연 후보"]
+  for candidate in candidates:
+    meta = " / ".join(
+      item
+      for item in (
+        candidate.get("region", ""),
+        candidate.get("date_text", ""),
+        candidate.get("venue_name", ""),
+      )
+      if item
+    )
+    label = candidate.get("name", "후보")
+    confidence = candidate.get("confidence_label", "uncertain")
+    suffix = f" - {meta}" if meta else ""
+    lines.append(f"- {label}{suffix} ({confidence})")
+  return lines
+
+
 def build_app() -> gr.Blocks:
   with gr.Blocks(title="Performation") as demo:
     gr.Markdown("# Performation")
@@ -78,4 +102,3 @@ def build_app() -> gr.Blocks:
 
 if __name__ == "__main__":
   build_app().launch()
-

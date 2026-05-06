@@ -2,10 +2,13 @@ import importlib
 
 from performation_agent import generate_visit_guide
 from performation_agent.nodes.analyze_input import analyze_input
+from performation_agent.nodes.assign_confidence import assign_confidence
 from performation_agent.nodes.build_search_queries import build_search_queries
 from performation_agent.nodes.classify_sources import classify_sources
+from performation_agent.nodes.infer_event_candidates import infer_event_candidates
 from performation_agent.nodes.infer_venue_from_search import infer_venue_from_search
 from performation_agent.nodes.load_venue_data import load_venue_data
+from performation_agent.nodes.summarize_information import summarize_information
 from performation_agent.workflow import NODE_SEQUENCE
 from performation_domain import ConfidenceLabel, VenueInfo
 
@@ -17,6 +20,7 @@ def test_workflow_has_expected_node_sequence() -> None:
     "build_search_queries",
     "search_public_web",
     "infer_venue_from_search",
+    "infer_event_candidates",
     "classify_sources",
     "summarize_information",
     "assign_confidence",
@@ -160,6 +164,66 @@ def test_infer_venue_from_search_ignores_url_only_matches() -> None:
   )
 
   assert result == {}
+
+
+def test_infer_event_candidates_returns_multiple_regional_options() -> None:
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "워터밤 서울 2026 일정 장소: 서울월드컵경기장",
+          "url": "https://example.com/waterbomb-seoul",
+          "snippet": "공식 예매 공지에서 서울 공연 일정과 장소를 확인하세요.",
+          "query": "워터밤 2026 일정 장소",
+        },
+        {
+          "title": "워터밤 인천 2026 일정 장소: 송도",
+          "url": "https://example.com/waterbomb-incheon",
+          "snippet": "인천 공연 일정은 공식 공지 기준으로 확인이 필요합니다.",
+          "query": "워터밤 2026 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert result["input_type"] == "event_candidates"
+  assert [candidate.region for candidate in candidates] == ["서울", "인천"]
+  assert candidates[0].name == "워터밤 서울"
+  assert candidates[0].venue_name == "서울월드컵경기장"
+  assert candidates[0].sources
+
+
+def test_candidate_summary_asks_user_to_choose() -> None:
+  state = {
+    "query": "워터밤",
+    "input_intent": "concert_or_event_name",
+    "input_type": "unsupported_or_ambiguous",
+    "search_results": [
+      {
+        "title": "워터밤 서울 2026 일정 장소: 서울월드컵경기장",
+        "url": "https://example.com/waterbomb-seoul",
+        "snippet": "서울 공연 공식 공지",
+        "query": "워터밤 2026 일정 장소",
+      },
+      {
+        "title": "워터밤 인천 2026 일정 장소: 송도",
+        "url": "https://example.com/waterbomb-incheon",
+        "snippet": "인천 공연 공식 공지",
+        "query": "워터밤 2026 일정 장소",
+      },
+    ],
+  }
+  candidate_result = infer_event_candidates(state)
+  summary_result = summarize_information({**state, **candidate_result})
+  confidence_result = assign_confidence({**state, **candidate_result, **summary_result})
+
+  assert candidate_result["input_type"] == "event_candidates"
+  assert any("여러 공연 후보" in item for item in summary_result["summary"])
+  assert any("후보" in item for item in confidence_result["confidence_notes"])
 
 
 def test_input_analysis_marks_concert_like_queries() -> None:

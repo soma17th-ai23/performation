@@ -5,6 +5,7 @@ from performation_agent.state import GuideState, SearchQuery
 
 QUERY_PURPOSES = (
   ("공식 정보", "official"),
+  ("일정 장소", "event_candidates"),
   ("입장 정보", "entry"),
   ("교통 정보", "transit"),
   ("물품보관", "locker"),

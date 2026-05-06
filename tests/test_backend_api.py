@@ -20,5 +20,5 @@ def test_create_guide_uses_agent_workflow() -> None:
   payload = response.json()
   assert payload["input_type"] == "venue_with_detail_question"
   assert payload["venue"]["name"] == "YES24 Live Hall"
+  assert payload["event_candidates"] == []
   assert payload["fallback_used"] is True
-

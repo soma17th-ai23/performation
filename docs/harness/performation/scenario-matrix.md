@@ -15,10 +15,11 @@ Use these cases for smoke testing app behavior, prompts, and harness output.
 | S9 | backend guide request | api_to_agent_boundary | backend returns output contract from agent workflow |
 | S10 | `아이유 콘서트 KSPO` | concert_with_venue_hint | infers KSPO DOME from venue hint and preserves original concert query in search |
 | S11 | `아이유 콘서트` with search result mentioning only `KSPO DOME` | concert_with_inferred_venue | infers venue from public search evidence and avoids guessing when multiple MVP venues appear |
+| S12 | `워터밤` with search results for Seoul and Incheon | event_candidates | returns multiple event candidates and asks the user to choose a region/date |
 
 ## Minimum Demo Pass
 
-- Run at least S1, S2, S5, S6, S10, and S11 before demo delivery.
+- Run at least S1, S2, S5, S6, S10, S11, and S12 before demo delivery.
 - Run architecture boundary tests before demo delivery.
 - Include exact command output or screenshots in `_workspace/04_demo-qa_report.md` when app code exists.
 - For documentation-only changes, verify structure with `python3 scripts/validate_harness.py`.

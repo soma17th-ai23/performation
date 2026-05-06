@@ -2,13 +2,13 @@
 
 ## Issue
 
-- GitHub issue: #14 `[agent] 공연명 단독 입력 검색 기반 공연장 추론`
+- GitHub issue: #16 `[agent] 공연 후보 다중 추론 및 선택 요청 응답 지원`
 
 ## Scope
 
-- Improve agent-side venue inference for concert-name-only queries.
-- Infer an MVP venue from public search results only when exactly one supported venue appears.
-- Keep unsupported or multi-venue search evidence ambiguous.
+- Add search-based event candidate options for broad concert/festival inputs.
+- Return multiple regional/date candidates instead of forcing a single venue guide.
+- Keep ticketing/payment/action execution out of scope.
 - Preserve frontend -> backend -> agent dependency boundary.
 
 ## Validation Plan

@@ -32,6 +32,15 @@ class VenueInfo(BaseModel):
   sources: list[Source] = Field(default_factory=list)
 
 
+class EventCandidate(BaseModel):
+  name: str
+  region: str = ""
+  date_text: str = ""
+  venue_name: str = ""
+  confidence_label: ConfidenceLabel = ConfidenceLabel.UNCERTAIN
+  sources: list[Source] = Field(default_factory=list)
+
+
 class GuideRequest(BaseModel):
   query: str = Field(min_length=1, max_length=200)
 
@@ -40,6 +49,7 @@ class GuideResponse(BaseModel):
   input: str
   input_type: str
   venue: VenueInfo | None = None
+  event_candidates: list[EventCandidate] = Field(default_factory=list)
   summary: list[str] = Field(default_factory=list)
   checklist: list[str] = Field(default_factory=list)
   transit_and_entry_tips: list[str] = Field(default_factory=list)
@@ -47,4 +57,3 @@ class GuideResponse(BaseModel):
   sources: list[Source] = Field(default_factory=list)
   confidence_notes: list[str] = Field(default_factory=list)
   fallback_used: bool = False
-

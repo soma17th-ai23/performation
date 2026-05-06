@@ -3,6 +3,7 @@ from performation_agent.nodes.assign_confidence import assign_confidence
 from performation_agent.nodes.build_search_queries import build_search_queries
 from performation_agent.nodes.classify_sources import classify_sources
 from performation_agent.nodes.format_response import format_response
+from performation_agent.nodes.infer_event_candidates import infer_event_candidates
 from performation_agent.nodes.infer_venue_from_search import infer_venue_from_search
 from performation_agent.nodes.load_venue_data import load_venue_data
 from performation_agent.nodes.search_public_web import search_public_web
@@ -14,6 +15,7 @@ __all__ = [
   "build_search_queries",
   "classify_sources",
   "format_response",
+  "infer_event_candidates",
   "infer_venue_from_search",
   "load_venue_data",
   "search_public_web",
