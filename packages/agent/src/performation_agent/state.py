@@ -36,7 +36,7 @@ class GuideState(TypedDict, total=False):
   input_type: str
   detail_keywords: list[str]
   matched_venue_alias: str | None
-  venue_inference_source: str
+  venue_inference_source: str | None
   venue: VenueInfo | None
   search_queries: list[SearchQuery]
   search_results: list[SearchResult]

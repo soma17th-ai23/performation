@@ -16,14 +16,7 @@ def infer_venue_from_search(state: GuideState) -> GuideState:
   repository = get_default_repository()
   matches_by_venue = {}
   for result in state.get("search_results", []):
-    searchable_text = " ".join(
-      (
-        result["title"],
-        result["snippet"],
-        result["url"],
-        result["query"],
-      )
-    )
+    searchable_text = _searchable_evidence_text(result)
     for match in repository.find_matches_by_query(searchable_text):
       matches_by_venue.setdefault(match.venue.name, match)
 
@@ -37,3 +30,7 @@ def infer_venue_from_search(state: GuideState) -> GuideState:
     "matched_venue_alias": match.alias,
     "venue_inference_source": "public_search",
   }
+
+
+def _searchable_evidence_text(result) -> str:
+  return " ".join((result["title"], result["snippet"]))

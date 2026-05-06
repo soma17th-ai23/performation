@@ -142,6 +142,26 @@ def test_infer_venue_from_search_does_not_guess_multiple_supported_venues() -> N
   assert result == {}
 
 
+def test_infer_venue_from_search_ignores_url_only_matches() -> None:
+  result = infer_venue_from_search(
+    {
+      "query": "랩비트 공연",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "랩비트 공연 정보",
+          "url": "https://example.com/kspo-dome-archive",
+          "snippet": "공연 일정과 티켓 안내를 확인하세요.",
+          "query": "랩비트 공연 공식 정보",
+        }
+      ],
+    }
+  )
+
+  assert result == {}
+
+
 def test_input_analysis_marks_concert_like_queries() -> None:
   result = analyze_input({"query": "아이유 콘서트 KSPO"})
 
