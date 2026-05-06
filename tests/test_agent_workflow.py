@@ -229,7 +229,7 @@ def test_infer_event_candidates_detects_full_dates_and_sejong() -> None:
   assert candidates[1].date_text == "8월 3일"
 
 
-def test_infer_event_candidates_separates_venue_conflicts_and_dedupes_sources() -> None:
+def test_infer_event_candidates_keeps_same_region_date_venue_conflicts_separate() -> None:
   result = infer_event_candidates(
     {
       "query": "워터밤",
@@ -262,6 +262,8 @@ def test_infer_event_candidates_separates_venue_conflicts_and_dedupes_sources() 
   assert [candidate.venue_name for candidate in candidates] == ["킨텍스", "올림픽공원"]
   assert candidates[0].confidence_label == ConfidenceLabel.LATEST_OFFICIAL_CHECK_REQUIRED
   assert len(candidates[0].sources) == 1
+  assert [source.url for source in candidates[0].sources] == ["https://example.com/waterbomb-seoul-k"]
+  assert [source.url for source in candidates[1].sources] == ["https://example.com/waterbomb-seoul-o"]
 
 
 def test_infer_event_candidates_merges_empty_venue_into_named_candidate() -> None:
