@@ -409,6 +409,37 @@ def test_infer_event_candidates_keeps_same_region_date_venue_conflicts_separate(
   assert [source.url for source in candidates[1].sources] == ["https://example.com/waterbomb-seoul-o"]
 
 
+def test_infer_event_candidates_merges_same_venue_year_and_specific_date() -> None:
+  current_year = date.today().year
+  result = infer_event_candidates(
+    {
+      "query": "워터밤",
+      "input_intent": "venue_or_concert_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": f"워터밤 서울 {current_year} 장소: 킨텍스",
+          "url": "https://example.com/waterbomb-summary",
+          "snippet": f"{current_year}년 개최 예정",
+          "query": f"워터밤 {current_year} 일정 장소",
+        },
+        {
+          "title": "워터밤 [서울] - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF999998",
+          "snippet": f"공식 KOPIS 공연 데이터. 공연기간 {current_year}년 7월 24일~26일. 공연장소 킨텍스.",
+          "query": "워터밤 KOPIS 공식 정보 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert len(candidates) == 1
+  assert candidates[0].date_text == f"{current_year}년 7월 24일~26일"
+  assert candidates[0].confidence_label == ConfidenceLabel.OFFICIAL_CONFIRMED
+  assert len(candidates[0].sources) == 2
+
+
 def test_infer_event_candidates_merges_empty_venue_into_named_candidate() -> None:
   current_year = date.today().year
   result = infer_event_candidates(

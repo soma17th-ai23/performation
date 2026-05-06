@@ -197,6 +197,8 @@ def _existing_candidate_key(
       continue
     if existing.venue_name and candidate.venue_name and existing.venue_name.casefold() != candidate.venue_name.casefold():
       continue
+    if existing.venue_name and candidate.venue_name:
+      return existing_key
     if not candidate.venue_name or not existing_key[3]:
       return existing_key
   return None
