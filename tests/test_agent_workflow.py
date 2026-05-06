@@ -4,6 +4,7 @@ from performation_agent import generate_visit_guide
 from performation_agent.nodes.analyze_input import analyze_input
 from performation_agent.nodes.build_search_queries import build_search_queries
 from performation_agent.nodes.classify_sources import classify_sources
+from performation_agent.nodes.infer_venue_from_search import infer_venue_from_search
 from performation_agent.nodes.load_venue_data import load_venue_data
 from performation_agent.workflow import NODE_SEQUENCE
 from performation_domain import ConfidenceLabel, VenueInfo
@@ -15,6 +16,7 @@ def test_workflow_has_expected_node_sequence() -> None:
     "load_venue_data",
     "build_search_queries",
     "search_public_web",
+    "infer_venue_from_search",
     "classify_sources",
     "summarize_information",
     "assign_confidence",
@@ -89,6 +91,75 @@ def test_concert_query_without_venue_hint_stays_ambiguous() -> None:
   assert guide.input_type == "unsupported_or_ambiguous"
   assert guide.venue is None
   assert any("공연장명" in item for item in guide.summary)
+
+
+def test_infer_venue_from_search_sets_single_supported_venue() -> None:
+  result = infer_venue_from_search(
+    {
+      "query": "아이유 콘서트",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "아이유 콘서트 KSPO DOME 공연 안내",
+          "url": "https://example.com/iu-kspo",
+          "snippet": "서울 KSPO DOME에서 열리는 공연 정보입니다.",
+          "query": "아이유 콘서트 공식 정보",
+        }
+      ],
+    }
+  )
+
+  assert result["input_type"] == "concert_with_inferred_venue"
+  assert result["venue"].name == "KSPO DOME"
+  assert result["matched_venue_alias"] == "KSPO DOME"
+  assert result["venue_inference_source"] == "public_search"
+
+
+def test_infer_venue_from_search_does_not_guess_multiple_supported_venues() -> None:
+  result = infer_venue_from_search(
+    {
+      "query": "아이유 콘서트",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "아이유 콘서트 KSPO DOME",
+          "url": "https://example.com/iu-kspo",
+          "snippet": "KSPO DOME 공연 정보",
+          "query": "아이유 콘서트 공식 정보",
+        },
+        {
+          "title": "아이유 콘서트 Blue Square",
+          "url": "https://example.com/iu-blue-square",
+          "snippet": "Blue Square 공연 정보",
+          "query": "아이유 콘서트 공식 정보",
+        },
+      ],
+    }
+  )
+
+  assert result == {}
+
+
+def test_infer_venue_from_search_ignores_url_only_matches() -> None:
+  result = infer_venue_from_search(
+    {
+      "query": "랩비트 공연",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "랩비트 공연 정보",
+          "url": "https://example.com/kspo-dome-archive",
+          "snippet": "공연 일정과 티켓 안내를 확인하세요.",
+          "query": "랩비트 공연 공식 정보",
+        }
+      ],
+    }
+  )
+
+  assert result == {}
 
 
 def test_input_analysis_marks_concert_like_queries() -> None:

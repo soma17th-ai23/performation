@@ -10,6 +10,8 @@ def assign_confidence(state: GuideState) -> GuideState:
     confidence_notes = [
       "공식 또는 안정적인 공연장 기본 정보와 공연별 변동 가능성이 큰 정보를 분리했습니다.",
     ]
+    if state.get("venue_inference_source") == "public_search":
+      confidence_notes.append("공연명 입력은 공개 검색 결과에서 단일 MVP 공연장 후보가 확인되어 연결했습니다.")
     if state.get("llm_used"):
       confidence_notes.append("Gemini LLM이 검색/공연장 데이터를 바탕으로 요약과 체크리스트 초안을 생성했습니다.")
     else:
