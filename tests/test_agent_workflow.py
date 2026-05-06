@@ -470,6 +470,28 @@ def test_infer_event_candidates_splits_region_date_pairs_from_one_source() -> No
   ]
 
 
+def test_infer_event_candidates_preserves_date_ranges() -> None:
+  current_year = date.today().year
+  result = infer_event_candidates(
+    {
+      "query": "랩비트 페스티벌",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": f"RAPBEAT {current_year} 개최 확정",
+          "url": "https://www.instagram.com/p/example/",
+          "snippet": f"일정 {current_year}년 6월 20일(토) ~ 21일(일) 2일간 장소 서울 마포 문화비축기지",
+          "query": f"랩비트 페스티벌 {current_year} 일정 장소",
+        }
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert candidates[0].date_text == f"{current_year}년 6월 20일~21일"
+
+
 def test_candidate_summary_asks_user_to_choose() -> None:
   state = {
     "query": "워터밤",

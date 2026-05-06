@@ -9,8 +9,8 @@
 
 | Input | Candidate | Verdict | Evidence |
 | --- | --- | --- | --- |
-| `랩비트 페스티벌` | `랩비트 서울`, `2026년 6월 20일`, `서울 마포 문화비축기지` | Valid | RAPBEAT official FAQ says RAPBEAT 2026 is at 문화비축기지 in 서울 마포구, and NOL ticket page lists period `2026.06.20 ~ 2026.06.21` with venue 문화비축기지. |
-| `워터밤` | `워터밤 서울`, `2026년 7월 24일`, `킨텍스 야외 글로벌 스테이지` | Valid | WATERBOMB official post confirms Seoul 2026 dates, and official tour page lists KINTEX Outdoor Global Stage. |
+| `랩비트 페스티벌` | `랩비트 서울`, `2026년 6월 20일~21일`, `서울 마포 문화비축기지` | Valid | RAPBEAT official FAQ says RAPBEAT 2026 is at 문화비축기지 in 서울 마포구, and NOL ticket page lists period `2026.06.20 ~ 2026.06.21` with venue 문화비축기지. |
+| `워터밤` | `워터밤 서울`, `2026년 7월 24일~26일`, `킨텍스 야외 글로벌 스테이지` | Valid | WATERBOMB official post confirms Seoul 2026 dates, and official tour page lists KINTEX Outdoor Global Stage. |
 | `워터밤` | `워터밤 부산`, `2026년 8월 7~9일`, venue blank | Valid with venue pending | WATERBOMB official post confirms Busan 2026 dates. TicketLink currently lists Busan venue as 추후 공지, so venue should stay blank/official-check-required. |
 
 ## Implementation Notes

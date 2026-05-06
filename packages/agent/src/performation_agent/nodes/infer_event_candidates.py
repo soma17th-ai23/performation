@@ -35,6 +35,10 @@ REGION_PATTERN = re.compile(r"(" + "|".join(KOREAN_REGIONS) + r")")
 DATE_PATTERN = re.compile(
   r"(20\d{2}(?:년)?(?:\s*[0-9]{1,2}월)?(?:\s*[0-9]{1,2}일)?|[0-9]{1,2}월\s*[0-9]{1,2}일|[0-9]{1,2}월)"
 )
+DATE_RANGE_PATTERNS = (
+  re.compile(r"(20\d{2}년\s*[0-9]{1,2}월\s*[0-9]{1,2}일)(?:\([^)]*\))?\s*~\s*([0-9]{1,2}일)"),
+  re.compile(r"(20\d{2}년\s*[0-9]{1,2}월\s*[0-9]{1,2})\s*~\s*([0-9]{1,2}일)"),
+)
 REGION_DATE_PAIR_PATTERN = re.compile(r"(" + "|".join(KOREAN_REGIONS) + r")\s*\(([^)]*(?:월|일)[^)]*)\)")
 YEAR_PATTERN = re.compile(r"(20\d{2})")
 VENUE_PATTERN = re.compile(
@@ -220,6 +224,8 @@ def _dates_compatible(left: str, right: str) -> bool:
 def _date_specificity(value: str) -> int:
   if not value:
     return 0
+  if "~" in value:
+    return 4
   if "일" in value:
     return 3
   if "월" in value:
@@ -228,6 +234,10 @@ def _date_specificity(value: str) -> int:
 
 
 def _date_text(evidence_text: str) -> str:
+  date_range_text = _date_range_text(evidence_text)
+  if date_range_text:
+    return date_range_text
+
   matches = [match.group(1).strip() for match in DATE_PATTERN.finditer(evidence_text)]
   if not matches:
     return ""
@@ -235,6 +245,14 @@ def _date_text(evidence_text: str) -> str:
   if matches_with_year:
     return max(matches_with_year, key=_date_specificity)
   return max(matches, key=_date_specificity)
+
+
+def _date_range_text(evidence_text: str) -> str:
+  for pattern in DATE_RANGE_PATTERNS:
+    match = pattern.search(evidence_text)
+    if match:
+      return f"{match.group(1)}~{match.group(2)}"
+  return ""
 
 
 def _pair_date_text(evidence_text: str, date_part: str) -> str:
