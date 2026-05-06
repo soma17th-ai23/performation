@@ -19,6 +19,6 @@ def health() -> dict[str, str]:
 
 
 @app.post("/guides", response_model=GuideResponse)
+@app.post("/analyze", response_model=GuideResponse)
 def create_guide(request: GuideRequest) -> GuideResponse:
   return generate_visit_guide(request.query)
-

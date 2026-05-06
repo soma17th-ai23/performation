@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 
 class ConfidenceLabel(str, Enum):
@@ -51,7 +52,10 @@ class EventInfo(BaseModel):
 
 
 class GuideRequest(BaseModel):
-  query: str = Field(min_length=1, max_length=200)
+  query: Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
+  ]
 
 
 class GuideResponse(BaseModel):

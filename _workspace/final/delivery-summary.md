@@ -2,19 +2,20 @@
 
 ## Issue
 
-- #16 `[agent] 공연 후보 다중 추론 및 선택 요청 응답 지원`
+- #22 `[backend] /analyze 호환 엔드포인트와 입력 검증 추가`
 
 ## Changes
 
-- Added `event_candidates` to the shared response contract.
-- Added `infer_event_candidates` to produce regional/date options for broad event inputs.
-- Added `event_candidates` input type and S12 scenario.
-- Updated the Gradio renderer to show candidate options when present.
-- Kept user-facing wording focused on selection and official confirmation, without exposing local-data internals.
+- Kept `POST /guides` as the canonical guide generation endpoint.
+- Added `POST /analyze` as a compatibility alias with the same `GuideResponse` contract.
+- Normalized `GuideRequest.query` before agent execution and reject blank or whitespace-only values.
+- Added backend API tests for the alias, trimming behavior, and blank input rejection.
+- Documented the backend API contract in `README.md`.
 
 ## Validation
 
 - `python3 scripts/validate_harness.py`
 - `uv run --python 3.11 pytest`
 - Manual smoke:
-  - `워터밤` + Seoul/Incheon search results -> `event_candidates`
+  - `/guides` and `/analyze` both return 200 with trimmed `input`
+  - `/guides` and `/analyze` both return 422 for whitespace-only `query`
