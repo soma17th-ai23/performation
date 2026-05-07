@@ -66,3 +66,20 @@ def test_internal_error_returns_500() -> None:
   payload = response.json()
   assert payload["status"] == "error"
   assert "error_message" in payload
+
+
+def test_agent_timeout_returns_504() -> None:
+  import time
+  from unittest.mock import patch
+
+  def slow_guide(_query: str):
+    time.sleep(1)
+
+  with patch("performation_backend.main._AGENT_TIMEOUT", 0.01), \
+       patch("performation_backend.main.generate_visit_guide", side_effect=slow_guide):
+    response = client.post("/guides", json={"query": "KSPO DOME"})
+
+  assert response.status_code == 504
+  payload = response.json()
+  assert payload["status"] == "error"
+  assert "error_message" in payload
