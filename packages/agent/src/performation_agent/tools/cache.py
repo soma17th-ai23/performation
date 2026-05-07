@@ -6,7 +6,7 @@ import os
 from collections.abc import Callable, Mapping
 from threading import RLock
 from time import monotonic
-from typing import TypeVar
+from typing import Any, TypeVar
 
 
 DEFAULT_CACHE_MAX_ITEMS = 256
@@ -17,6 +17,8 @@ _CACHE_MISS = object()
 _T = TypeVar("_T")
 _CACHES: dict[str, TTLCache] = {}
 _CACHES_LOCK = RLock()
+_KEY_LOCKS: dict[tuple[str, str], RLock] = {}
+_KEY_LOCKS_LOCK = RLock()
 
 
 class TTLCache:
@@ -28,10 +30,10 @@ class TTLCache:
   ) -> None:
     self._max_items = max(max_items, 1)
     self._timer = timer
-    self._items: dict[str, tuple[float, object]] = {}
+    self._items: dict[str, tuple[float, Any]] = {}
     self._lock = RLock()
 
-  def get(self, key: str):
+  def get(self, key: str) -> Any:
     with self._lock:
       now = self._timer()
       item = self._items.get(key)
@@ -43,13 +45,13 @@ class TTLCache:
         return _CACHE_MISS
       return copy.deepcopy(value)
 
-  def set(self, key: str, value, *, ttl_seconds: float) -> None:
+  def set(self, key: str, value: Any, *, ttl_seconds: float) -> None:
     if ttl_seconds <= 0:
       return
     with self._lock:
       self._delete_expired()
       self._items[key] = (self._timer() + ttl_seconds, copy.deepcopy(value))
-      self._evict_oldest()
+      self._evict_next_expiring()
 
   def clear(self) -> None:
     with self._lock:
@@ -61,15 +63,15 @@ class TTLCache:
     for key in expired_keys:
       del self._items[key]
 
-  def _evict_oldest(self) -> None:
+  def _evict_next_expiring(self) -> None:
     while len(self._items) > self._max_items:
-      oldest_key = min(self._items, key=lambda key: self._items[key][0])
-      del self._items[oldest_key]
+      next_expiry_key = min(self._items, key=lambda key: self._items[key][0])
+      del self._items[next_expiry_key]
 
 
 def get_or_set_cached(
   namespace: str,
-  key_parts,
+  key_parts: Any,
   *,
   ttl_seconds: float,
   max_items: int,
@@ -84,12 +86,17 @@ def get_or_set_cached(
   if cached_value is not _CACHE_MISS:
     return cached_value
 
-  value = factory()
-  cache.set(key, value, ttl_seconds=ttl_seconds)
-  return value
+  with _key_lock(namespace, key):
+    cached_value = cache.get(key)
+    if cached_value is not _CACHE_MISS:
+      return cached_value
+
+    value = factory()
+    cache.set(key, value, ttl_seconds=ttl_seconds)
+    return value
 
 
-def cache_key(parts) -> str:
+def cache_key(parts: Any) -> str:
   return json.dumps(parts, ensure_ascii=False, sort_keys=True, default=str)
 
 
@@ -125,6 +132,8 @@ def clear_agent_caches() -> None:
   with _CACHES_LOCK:
     for cache in _CACHES.values():
       cache.clear()
+  with _KEY_LOCKS_LOCK:
+    _KEY_LOCKS.clear()
 
 
 def _cache(namespace: str, *, max_items: int) -> TTLCache:
@@ -134,3 +143,12 @@ def _cache(namespace: str, *, max_items: int) -> TTLCache:
       cache = TTLCache(max_items=max_items)
       _CACHES[namespace] = cache
     return cache
+
+
+def _key_lock(namespace: str, key: str) -> RLock:
+  with _KEY_LOCKS_LOCK:
+    lock = _KEY_LOCKS.get((namespace, key))
+    if lock is None:
+      lock = RLock()
+      _KEY_LOCKS[(namespace, key)] = lock
+    return lock

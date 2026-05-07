@@ -3,7 +3,7 @@
 ## Commands
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 108 passed
+- `uv run --python 3.11 pytest` - pass, 109 passed
 - `git diff --check` - pass
 - `.env` loaded in-process + `generate_visit_guide("워터밤")` - pass
 - `.env` loaded in-process + FastAPI `TestClient` smoke for `/health` and `/guides` - pass
@@ -22,7 +22,7 @@
 - Live review-tip smoke with Tavily+Gemini and KOPIS configured through runtime env: `KSPO DOME 스탠딩`, `YES24 Live Hall 물품보관`, `워터밤 준비물 꿀팁` - pass
 - Performance-name-only review-tip smoke with Tavily+Gemini and KOPIS configured through runtime env: `워터밤`, `세븐틴 콘서트` - pass
 - Review-tip cap/dedupe regression for LLM output - pass
-- Unit cache scenarios for public search, KOPIS, Gemini provider calls, and uncached provider failures - pass
+- Unit cache scenarios for public search, KOPIS, Gemini provider calls, concurrent same-key calls, and uncached provider failures - pass
 - Repeated live `워터밤` smoke in one process - pass, first run about 16.21s and second cached run about 0.00s
 
 ## Scenarios
@@ -54,7 +54,7 @@
 | review tip | `워터밤 준비물 꿀팁` | `unsupported_or_ambiguous` | 공식 후보를 강제하지 않고 후기 기반 준비물/물품보관/퇴장/입장 팁 4개만 표시 |
 | review tip | `워터밤` | `event_candidates` | 공연명만 입력해도 후보와 후기 기반 준비물/퇴장/물품보관/입장 팁을 같이 표시 |
 | review tip | `세븐틴 콘서트` | `concert_with_inferred_venue` | 공연명만 입력해도 MVP 공연장 추론 결과와 후기 기반 꿀팁을 같이 표시 |
-| cache | repeated provider calls | cached provider result | 같은 query/provider 설정에서 public search, KOPIS, Gemini 호출이 한 번만 실행되는지 단위 테스트로 확인 |
+| cache | repeated/concurrent provider calls | cached provider result | 같은 query/provider 설정에서 public search, KOPIS, Gemini 호출이 한 번만 실행되고, 같은 key의 동시 요청도 factory를 한 번만 실행하는지 단위 테스트로 확인 |
 | cache | repeated `워터밤` | cached guide provider inputs | 같은 프로세스에서 두 번째 호출이 외부 provider 재호출 없이 즉시 반환됨 |
 
 ## Risks
