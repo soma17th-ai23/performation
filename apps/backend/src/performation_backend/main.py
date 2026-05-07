@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from performation_agent import generate_visit_guide
 from performation_domain import GuideRequest, GuideResponse
@@ -10,6 +13,14 @@ app = FastAPI(
   title="Performation API",
   description="Backend API that owns Performation agent workflow execution.",
   version="0.1.0",
+)
+
+_origins = os.getenv("PERFORMATION_CORS_ORIGINS", "*")
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=[origin.strip() for origin in _origins.split(",")],
+  allow_methods=["*"],
+  allow_headers=["*"],
 )
 
 
