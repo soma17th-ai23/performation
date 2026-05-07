@@ -45,6 +45,7 @@ Included:
 - input classification for concert names, venue names, and detailed questions
 - official performance lookup through KOPIS when configured
 - public web search through Tavily, Brave Search, or equivalent MCP/API
+- public-search-discovered official SNS notice links as latest confirmation channels
 - local venue basics
 - source and confidence labels
 - visit-prep checklist
@@ -59,7 +60,7 @@ Included:
 
 Excluded:
 
-- direct X, Instagram, Threads, or login-based SNS crawling
+- direct X, Instagram, Threads, or login-based SNS crawling beyond public search result metadata/snippets
 - ticketing, reservation, payment, inquiry, or user account flows
 - personalized recommendations, calendar integration, user reports, and long-term memory
 - seat-view image collection

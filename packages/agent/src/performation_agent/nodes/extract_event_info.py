@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 from performation_agent.state import GuideState, SearchResult
+from performation_agent.tools.source_classifier import classify_social_source
 from performation_domain import ConfidenceLabel, EventInfo, Source
 
 
@@ -12,6 +14,7 @@ DATE_PATTERNS = (
   re.compile(r"(20\d{2}[.]\s*[0-9]{1,2}[.]\s*[0-9]{1,2})"),
   re.compile(r"(20\d{2}년\s*[0-9]{1,2}월\s*[0-9]{1,2}일)"),
 )
+YEAR_PATTERN = re.compile(r"(20\d{2})")
 TIME_PATTERN = re.compile(r"((?:[01]?[0-9]|2[0-3]):[0-5][0-9]|(?:[0-9]{1,2})\s*PM)", re.IGNORECASE)
 SOURCE_PRIORITY = {
   ConfidenceLabel.OFFICIAL_CONFIRMED: 4,
@@ -59,6 +62,8 @@ def _event_info_from_result(state: GuideState, result: SearchResult, query_terms
   date_text = _date_text(evidence_text)
   if not date_text:
     return None
+  if not YEAR_PATTERN.search(state["query"]) and _event_date_is_past(date_text):
+    return None
 
   venue_name = _venue_name(state, evidence_text)
   source_type = _source_type(result)
@@ -87,7 +92,7 @@ def _query_terms(query: str) -> list[str]:
 
 
 def _event_info_query(query: str) -> bool:
-  return any(marker in query for marker in ("공식 정보", "일정 장소"))
+  return any(marker in query for marker in ("공식 정보", "공식 SNS 공지", "일정 장소"))
 
 
 def _event_info_score(event_info: EventInfo) -> tuple[int, int, int, int]:
@@ -101,6 +106,9 @@ def _event_info_score(event_info: EventInfo) -> tuple[int, int, int, int]:
 
 def _merge_event_info(selected_info: EventInfo, event_info: EventInfo) -> None:
   if event_info.date_text != selected_info.date_text:
+    return
+
+  if SOURCE_PRIORITY[event_info.confidence_label] < SOURCE_PRIORITY[selected_info.confidence_label]:
     return
 
   if "..." in selected_info.title and "..." not in event_info.title:
@@ -132,6 +140,30 @@ def _normalize_date(value: str) -> str:
   return re.sub(r"\s*[.]\s*", ".", normalized).strip(".")
 
 
+def _event_date_is_past(value: str) -> bool:
+  event_date = _event_date(value)
+  return event_date is not None and event_date < date.today()
+
+
+def _event_date(value: str) -> date | None:
+  dotted_match = re.search(r"(20\d{2})[.]\s*([0-9]{1,2})[.]\s*([0-9]{1,2})", value)
+  if dotted_match:
+    return _safe_date(int(dotted_match.group(1)), int(dotted_match.group(2)), int(dotted_match.group(3)))
+
+  korean_match = re.search(r"(20\d{2})년\s*([0-9]{1,2})월\s*([0-9]{1,2})일", value)
+  if korean_match:
+    return _safe_date(int(korean_match.group(1)), int(korean_match.group(2)), int(korean_match.group(3)))
+
+  return None
+
+
+def _safe_date(year: int, month: int, day: int) -> date | None:
+  try:
+    return date(year, month, day)
+  except ValueError:
+    return None
+
+
 def _time_text(evidence_text: str) -> str:
   for match in TIME_PATTERN.finditer(evidence_text):
     prefix = evidence_text[max(0, match.start() - 20) : match.start()]
@@ -161,6 +193,10 @@ def _event_title(query: str, title: str) -> str:
 
 
 def _source_type(result: SearchResult) -> ConfidenceLabel:
+  social_label = classify_social_source(result)
+  if social_label is not None:
+    return social_label
+
   text = " ".join((result["title"], result["url"], result["snippet"])).casefold()
   if any(term in text for term in PUBLIC_SOURCE_HINTS):
     return ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
