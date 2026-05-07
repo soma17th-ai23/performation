@@ -15,8 +15,9 @@ from performation_domain import ErrorResponse, GuideRequest, GuideResponse
 
 
 logging.basicConfig(
-  level=os.getenv("PERFORMATION_LOG_LEVEL", "INFO").upper(),
+  level=os.getenv("PERFORMATION_LOG_LEVEL", "INFO").upper() or "INFO",
   format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+  force=True,
 )
 logger = logging.getLogger("performation.backend")
 
