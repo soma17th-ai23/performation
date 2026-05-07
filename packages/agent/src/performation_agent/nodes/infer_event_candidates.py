@@ -371,6 +371,7 @@ def _clean_venue_name(value: str) -> str:
     " 음악의",
     " 초호화",
     " 라인업",
+    " 티켓",
     " 공식",
     " 공지",
     " 안내",
@@ -384,7 +385,7 @@ def _clean_venue_name(value: str) -> str:
     cleaned = re.sub(rf"^{region}\s+(킨텍스\b)", r"\1", cleaned)
   if cleaned.startswith("안내"):
     return ""
-  if any(term in cleaned for term in ("티켓팅", "예매", "가격", "준비물", "라인업", "출연진", "추후 공개", "추후공지", "미정")):
+  if any(term in cleaned for term in ("티켓", "티켓팅", "예매", "가격", "준비물", "라인업", "출연진", "추후 공개", "추후공지", "미정")):
     return ""
   if cleaned == "킨텍스 야외 글로벌":
     return "킨텍스 야외 글로벌 스테이지"

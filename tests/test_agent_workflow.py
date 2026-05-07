@@ -440,6 +440,37 @@ def test_infer_event_candidates_merges_same_venue_year_and_specific_date() -> No
   assert len(candidates[0].sources) == 2
 
 
+def test_infer_event_candidates_trims_ticket_suffix_before_merging_venue() -> None:
+  current_year = date.today().year
+  result = infer_event_candidates(
+    {
+      "query": "서울재즈페스티벌",
+      "input_intent": "concert_or_event_name",
+      "input_type": "unsupported_or_ambiguous",
+      "search_results": [
+        {
+          "title": "제18회 서울재즈페스티벌 - KOPIS 공연 공식 데이터",
+          "url": "https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=PF999997",
+          "snippet": f"공식 KOPIS 공연 데이터. 공연기간 {current_year}년 5월 22일~24일. 공연장소 올림픽공원.",
+          "query": "서울재즈페스티벌 KOPIS 공식 정보 일정 장소",
+        },
+        {
+          "title": f"서울재즈페스티벌 {current_year} 장소: 올림픽공원 티켓",
+          "url": "https://example.com/seoul-jazz-ticket",
+          "snippet": f"{current_year}년 5월 22일 티켓 안내",
+          "query": f"서울재즈페스티벌 {current_year} 일정 장소",
+        },
+      ],
+    }
+  )
+
+  candidates = result["event_candidates"]
+  assert len(candidates) == 1
+  assert candidates[0].venue_name == "올림픽공원"
+  assert candidates[0].date_text == f"{current_year}년 5월 22일~24일"
+  assert len(candidates[0].sources) == 2
+
+
 def test_infer_event_candidates_merges_empty_venue_into_named_candidate() -> None:
   current_year = date.today().year
   result = infer_event_candidates(

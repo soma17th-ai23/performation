@@ -15,15 +15,17 @@
   - KINTEX address snippets no longer create a false `고양` regional WATERBOMB candidate
   - KINTEX venue names trim marketing copy such as `올해는 더 강력한...`
 - Merged duplicate WATERBOMB Seoul candidates when KOPIS has the same venue with a more specific date.
+- Trimmed ticket suffixes from venue names after the Seoul Jazz Festival smoke surfaced `올림픽공원 티켓`.
 - Added `threads.com` to SNS-domain handling after live results surfaced Threads URLs.
 - Documented the boundary: public search metadata/snippets only, no direct SNS login crawling.
 
 ## Validation
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 92 passed
+- `uv run --python 3.11 pytest` - pass, 93 passed
 - `git diff --check` - pass
 - `tests/test_source_classifier.py` covers official SNS, unverified SNS, and fan/review SNS branches.
 - `tests/test_agent_workflow.py` covers SNS query generation, candidate extraction without official overtrust, past-date filtering, and KINTEX address-region cleanup.
 - PR review follow-up prevents lower-confidence SNS/review fields from filling higher-confidence event info.
 - Live multi-concert smoke covered `랩비트 페스티벌`, `워터밤`, `EK 콘서트`, `아이유 콘서트 KSPO`, `데이식스 콘서트`, and `싸이 흠뻑쇼` with Tavily+Gemini and KOPIS configured through runtime env.
+- Extra live examples covered `세븐틴 콘서트`, `에스파 콘서트`, `블랙핑크 콘서트`, `뮤지컬 알라딘`, `서울재즈페스티벌`, and `펜타포트 락 페스티벌`.
