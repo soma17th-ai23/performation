@@ -48,4 +48,21 @@ def test_guide_request_trims_query_before_workflow() -> None:
 def test_blank_query_is_rejected(endpoint: str) -> None:
   response = client.post(endpoint, json={"query": "   "})
 
-  assert response.status_code == 422
+  assert response.status_code == 400
+  payload = response.json()
+  assert payload["status"] == "error"
+  assert "error_message" in payload
+
+
+def test_internal_error_returns_500() -> None:
+  from unittest.mock import patch
+  from fastapi.testclient import TestClient
+
+  safe_client = TestClient(app, raise_server_exceptions=False)
+  with patch("performation_backend.main.generate_visit_guide", side_effect=RuntimeError("agent failure")):
+    response = safe_client.post("/guides", json={"query": "KSPO DOME"})
+
+  assert response.status_code == 500
+  payload = response.json()
+  assert payload["status"] == "error"
+  assert "error_message" in payload

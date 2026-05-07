@@ -51,6 +51,12 @@ class EventInfo(BaseModel):
   sources: list[Source] = Field(default_factory=list)
 
 
+class ErrorResponse(BaseModel):
+  status: str = "error"
+  error_message: str
+  detail: str | None = None
+
+
 class GuideRequest(BaseModel):
   query: Annotated[
     str,
