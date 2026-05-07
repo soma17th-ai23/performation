@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import os
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from performation_agent import generate_visit_guide
@@ -24,6 +25,8 @@ app.add_middleware(
   allow_methods=["*"],
   allow_headers=["*"],
 )
+
+_AGENT_TIMEOUT = float(os.getenv("PERFORMATION_AGENT_TIMEOUT_SECONDS", "30"))
 
 
 @app.exception_handler(RequestValidationError)
@@ -56,5 +59,17 @@ def health() -> dict[str, str]:
 
 @app.post("/guides", response_model=GuideResponse)
 @app.post("/analyze", response_model=GuideResponse)
-def create_guide(request: GuideRequest) -> GuideResponse:
-  return generate_visit_guide(request.query)
+async def create_guide(request: GuideRequest) -> GuideResponse | JSONResponse:
+  try:
+    return await asyncio.wait_for(
+      asyncio.to_thread(generate_visit_guide, request.query),
+      timeout=_AGENT_TIMEOUT,
+    )
+  except asyncio.TimeoutError:
+    return JSONResponse(
+      status_code=504,
+      content=ErrorResponse(
+        error_message="요청 처리 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+        detail=None,
+      ).model_dump(),
+    )
