@@ -17,12 +17,12 @@ app = FastAPI(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-  first = exc.errors()[0]
+  errors = exc.errors()
   return JSONResponse(
     status_code=400,
     content=ErrorResponse(
       error_message="입력값이 올바르지 않습니다.",
-      detail=first.get("msg"),
+      detail=errors[0].get("msg") if errors else None,
     ).model_dump(),
   )
 
