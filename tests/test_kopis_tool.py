@@ -2,6 +2,7 @@ from datetime import date
 
 import httpx
 
+from performation_agent.tools.cache import clear_agent_caches
 from performation_agent.tools.kopis import (
   KOPIS_PERFORMANCE_LIST_URL,
   KOPIS_PERFORMANCE_PAGE_URL,
@@ -166,3 +167,34 @@ def test_search_kopis_with_fallback_handles_provider_errors() -> None:
       raise httpx.TimeoutException("timeout")
 
   assert search_kopis_with_fallback("워터밤", provider=FailingProvider()) == []
+
+
+def test_search_kopis_with_fallback_caches_successful_results() -> None:
+  clear_agent_caches()
+
+  class CountingProvider:
+    def __init__(self) -> None:
+      self.calls = 0
+      self._start_date = date(2026, 5, 1)
+      self._lookahead_days = 120
+      self._rows = 10
+
+    def search_performances(self, query: str):
+      self.calls += 1
+      return [
+        {
+          "title": "워터밤 [서울] - KOPIS 공연 공식 데이터",
+          "url": KOPIS_PERFORMANCE_PAGE_URL.format(performance_id="PF999998"),
+          "snippet": f"{query} {self.calls}",
+          "query": f"{query} KOPIS 공식 정보 일정 장소",
+        }
+      ]
+
+  provider = CountingProvider()
+  env = {"PERFORMATION_KOPIS_CACHE_TTL_SECONDS": "60"}
+
+  first = search_kopis_with_fallback("워터밤", provider=provider, env=env)
+  second = search_kopis_with_fallback("워터밤", provider=provider, env=env)
+
+  assert first == second
+  assert provider.calls == 1

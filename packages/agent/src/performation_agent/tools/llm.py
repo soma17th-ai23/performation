@@ -4,11 +4,18 @@ import json
 import os
 from collections.abc import Mapping
 from functools import lru_cache
+from hashlib import sha256
 from typing import Protocol
 
 import httpx
 
 from performation_agent.state import GuideDraft, GuideState
+from performation_agent.tools.cache import (
+  DEFAULT_LLM_CACHE_TTL_SECONDS,
+  cache_max_items,
+  cache_ttl_seconds,
+  get_or_set_cached,
+)
 from performation_agent.tools.guide_draft import build_public_review_tip_items
 
 
@@ -102,8 +109,15 @@ def generate_guide_draft_with_fallback(
   if selected_provider is None:
     return fallback_draft, False
 
+  prompt = build_guide_prompt(state, fallback_draft)
   try:
-    draft = selected_provider.generate(build_guide_prompt(state, fallback_draft))
+    draft = get_or_set_cached(
+      "llm_guide_draft",
+      _llm_cache_key(selected_provider, prompt),
+      ttl_seconds=cache_ttl_seconds(env, "PERFORMATION_LLM_CACHE_TTL_SECONDS", DEFAULT_LLM_CACHE_TTL_SECONDS),
+      max_items=cache_max_items(env),
+      factory=lambda: selected_provider.generate(prompt),
+    )
   except (httpx.HTTPError, ValueError):
     return fallback_draft, False
   return _merge_with_fallback(draft, fallback_draft), True
@@ -157,6 +171,14 @@ def build_guide_prompt(state: GuideState, fallback_draft: GuideDraft) -> str:
     "제공된 JSON만 근거로 한국어 응답을 만들고, 모르는 내용은 추측하지 마라.\n\n"
     f"{json.dumps(payload, ensure_ascii=False)}"
   )
+
+
+def _llm_cache_key(provider: GuideDraftProvider, prompt: str) -> dict[str, str]:
+  return {
+    "provider": f"{type(provider).__module__}.{type(provider).__qualname__}",
+    "model": str(getattr(provider, "_model", "")),
+    "prompt_sha256": sha256(prompt.encode("utf-8")).hexdigest(),
+  }
 
 
 def _public_review_results_for_prompt(state: GuideState) -> list[dict[str, str]]:

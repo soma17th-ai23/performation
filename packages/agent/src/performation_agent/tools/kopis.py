@@ -11,6 +11,12 @@ from defusedxml import ElementTree as ET
 from defusedxml.common import DefusedXmlException
 
 from performation_agent.state import SearchResult
+from performation_agent.tools.cache import (
+  DEFAULT_KOPIS_CACHE_TTL_SECONDS,
+  cache_max_items,
+  cache_ttl_seconds,
+  get_or_set_cached,
+)
 
 
 KOPIS_PERFORMANCE_LIST_URL = "https://kopis.or.kr/openApi/restful/pblprfr"
@@ -96,7 +102,13 @@ def search_kopis_with_fallback(
     return []
 
   try:
-    return selected_provider.search_performances(query)
+    return get_or_set_cached(
+      "kopis_search",
+      _kopis_cache_key(selected_provider, query),
+      ttl_seconds=cache_ttl_seconds(env, "PERFORMATION_KOPIS_CACHE_TTL_SECONDS", DEFAULT_KOPIS_CACHE_TTL_SECONDS),
+      max_items=cache_max_items(env),
+      factory=lambda: selected_provider.search_performances(query),
+    )
   except (httpx.HTTPError, ET.ParseError, DefusedXmlException, ValueError):
     return []
 
@@ -139,6 +151,16 @@ def _normalize_kopis_results(payload: str, *, query: str, match_query: str) -> l
       }
     )
   return results
+
+
+def _kopis_cache_key(provider: KopisProvider, query: str) -> dict[str, object]:
+  return {
+    "provider": f"{type(provider).__module__}.{type(provider).__qualname__}",
+    "query": query,
+    "start_date": getattr(provider, "_start_date", ""),
+    "lookahead_days": getattr(provider, "_lookahead_days", ""),
+    "rows": getattr(provider, "_rows", ""),
+  }
 
 
 def _snippet(item: ET.Element) -> str:

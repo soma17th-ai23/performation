@@ -2,6 +2,7 @@ import json
 
 import httpx
 
+from performation_agent.tools.cache import clear_agent_caches
 from performation_agent.tools.guide_draft import build_deterministic_guide_draft
 from performation_agent.tools.llm import (
   DEFAULT_GEMINI_MODEL,
@@ -105,6 +106,35 @@ def test_generate_guide_draft_uses_provider_output() -> None:
   assert llm_used is True
   assert draft["summary"] == ["AI 요약"]
   assert draft["checklist"] == ["AI 체크리스트"]
+
+
+def test_generate_guide_draft_caches_provider_output() -> None:
+  clear_agent_caches()
+
+  class CountingProvider:
+    def __init__(self) -> None:
+      self.calls = 0
+
+    def generate(self, prompt: str):
+      self.calls += 1
+      return {
+        "summary": [f"AI 요약 {self.calls}"],
+        "checklist": ["AI 체크리스트"],
+        "transit_and_entry_tips": ["AI 팁"],
+        "official_check_required": ["AI 공식 확인"],
+      }
+
+  provider = CountingProvider()
+  env = {"PERFORMATION_LLM_CACHE_TTL_SECONDS": "60"}
+  state = {"query": "KSPO DOME 준비물", "input_type": "venue_with_detail_question"}
+
+  first, first_used = generate_guide_draft_with_fallback(state, FALLBACK_DRAFT, provider=provider, env=env)
+  second, second_used = generate_guide_draft_with_fallback(state, FALLBACK_DRAFT, provider=provider, env=env)
+
+  assert first_used is True
+  assert second_used is True
+  assert first == second
+  assert provider.calls == 1
 
 
 def test_generate_guide_draft_keeps_fallback_on_provider_error() -> None:

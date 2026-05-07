@@ -65,6 +65,15 @@ Optional agent data sources:
 - `TAVILY_API_KEY` or `BRAVE_SEARCH_API_KEY`: enables public web search for venue, entry, transit, locker, and review context.
 - `GEMINI_API_KEY`: enables LLM-assisted guide drafting; deterministic fallback remains available without it.
 
+Provider caching:
+
+- `PERFORMATION_CACHE_ENABLED`: set to `false` to disable in-memory provider caches.
+- `PERFORMATION_CACHE_TTL_SECONDS`: shared TTL fallback for provider caches.
+- `PERFORMATION_SEARCH_CACHE_TTL_SECONDS`: public search cache TTL, default 1 hour.
+- `PERFORMATION_KOPIS_CACHE_TTL_SECONDS`: KOPIS cache TTL, default 6 hours.
+- `PERFORMATION_LLM_CACHE_TTL_SECONDS`: Gemini draft cache TTL, default 1 hour.
+- `PERFORMATION_CACHE_MAX_ITEMS`: max entries per cache namespace, default 256.
+
 Public web search may surface official SNS notice links. The agent treats them as latest official-check channels only when the result text indicates an official account or official notice; it does not log in to or directly crawl SNS platforms.
 Public web search may also surface blog/review/SNS practical tips. The agent can include those as `후기 참고:` tips, but keeps them as `public_review_reference` and does not treat them as official facts.
 
