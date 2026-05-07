@@ -2,30 +2,29 @@
 
 ## Issue
 
-- #26 `[agent] 공개 SNS 공식 공지 출처 처리 추가`
+- #28 `[agent] 공개 후기/SNS 기반 관람 꿀팁 수집 확장`
 
 ## Changes
 
-- Added `공식 SNS 공지` public-search query coverage.
-- Added SNS source classification that distinguishes official notices, unverified posts, and fan/review posts.
-- Allowed official SNS notice snippets to feed event candidate/event info extraction while keeping the confidence label at `latest_official_check_required`.
-- Hardened live-search extraction after multi-concert smoke tests:
-  - yearless broad event queries now drop past-only event candidates
-  - yearless single-concert queries no longer surface past event dates as current event info
-  - KINTEX address snippets no longer create a false `고양` regional WATERBOMB candidate
-  - KINTEX venue names trim marketing copy such as `올해는 더 강력한...`
-- Merged duplicate WATERBOMB Seoul candidates when KOPIS has the same venue with a more specific date.
-- Trimmed ticket suffixes from venue names after the Seoul Jazz Festival smoke surfaced `올림픽공원 티켓`.
-- Added `threads.com` to SNS-domain handling after live results surfaced Threads URLs.
-- Documented the boundary: public search metadata/snippets only, no direct SNS login crawling.
+- Added public-review tip search coverage:
+  - `관람 후기 꿀팁`
+  - `입장 대기 스탠딩 후기`
+  - `물품보관 퇴장 교통 후기`
+- Expanded SNS/community domains for public-search-discovered evidence, including TikTok, Facebook, and Weverse.
+- Added deterministic public-review tip extraction for entry/standing, locker, exit/transit, and preparation categories.
+- Preserved trust boundaries:
+  - practical tips are emitted as `후기 참고:`
+  - public review/SNS tips remain `public_review_reference`
+  - official-check items remain separate from anecdotal tips
+- Added review tips to performance-name-only flows, including broad `event_candidates` responses.
+- Updated LLM prompt payload with public-review snippets and tip candidates while keeping secrets out of prompts.
+- Added cap/dedupe handling so review tips do not flood the response when LLM output is verbose.
 
 ## Validation
 
+- `uv run --python 3.11 pytest tests/test_agent_workflow.py tests/test_source_classifier.py tests/test_llm_tool.py` - pass, 75 passed
+- `uv run --python 3.11 pytest` - pass, 100 passed
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 93 passed
 - `git diff --check` - pass
-- `tests/test_source_classifier.py` covers official SNS, unverified SNS, and fan/review SNS branches.
-- `tests/test_agent_workflow.py` covers SNS query generation, candidate extraction without official overtrust, past-date filtering, and KINTEX address-region cleanup.
-- PR review follow-up prevents lower-confidence SNS/review fields from filling higher-confidence event info.
-- Live multi-concert smoke covered `랩비트 페스티벌`, `워터밤`, `EK 콘서트`, `아이유 콘서트 KSPO`, `데이식스 콘서트`, and `싸이 흠뻑쇼` with Tavily+Gemini and KOPIS configured through runtime env.
-- Extra live examples covered `세븐틴 콘서트`, `에스파 콘서트`, `블랙핑크 콘서트`, `뮤지컬 알라딘`, `서울재즈페스티벌`, and `펜타포트 락 페스티벌`.
+- Live smoke covered `KSPO DOME 스탠딩`, `YES24 Live Hall 물품보관`, and `워터밤 준비물 꿀팁` with Tavily+Gemini and KOPIS configured through runtime env.
+- Performance-name-only smoke covered `워터밤` and `세븐틴 콘서트`.

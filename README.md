@@ -66,6 +66,7 @@ Optional agent data sources:
 - `GEMINI_API_KEY`: enables LLM-assisted guide drafting; deterministic fallback remains available without it.
 
 Public web search may surface official SNS notice links. The agent treats them as latest official-check channels only when the result text indicates an official account or official notice; it does not log in to or directly crawl SNS platforms.
+Public web search may also surface blog/review/SNS practical tips. The agent can include those as `후기 참고:` tips, but keeps them as `public_review_reference` and does not treat them as official facts.
 
 Run frontend in another terminal:
 

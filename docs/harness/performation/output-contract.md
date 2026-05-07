@@ -85,7 +85,7 @@ Generated user-facing guides should use this stable shape unless the product UI 
 | Label | Meaning | Examples |
 | --- | --- | --- |
 | `official_confirmed` | official or public-data source | venue site, ticket seller, KOPIS, public transport or public-data page |
-| `public_review_reference` | anecdotal open web source | public blog, open review, guide post |
+| `public_review_reference` | anecdotal open web source | public blog, open review, guide post, public-search-discovered SNS tip snippet |
 | `latest_official_check_required` | may change by event/date/operator | entry gate, locker operation, ID check, standing rules, official SNS notice link |
 | `uncertain` | sparse, conflicting, or low-quality evidence | one-off result, unclear source, contradiction without official anchor |
 
@@ -93,6 +93,7 @@ Generated user-facing guides should use this stable shape unless the product UI 
 
 - Never say public-review information is official.
 - Never treat an SNS domain alone as official; use it as a latest-check channel only when the search result indicates an official account or notice.
+- Public-review or SNS practical tips must be phrased as reference, preferably starting with `후기 참고:`.
 - Prefer "공식 확인 필요" or "공연별 변동 가능성 있음" for event-specific operations.
 - If search fails, say public search evidence could not be used and continue with local venue data only.
 - Do not mention unsupported actions as available features.

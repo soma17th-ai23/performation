@@ -20,6 +20,10 @@ PUBLIC_REVIEW_HINTS = (
   "후기",
   "리뷰",
   "방문기",
+  "관람팁",
+  "꿀팁",
+  "tip",
+  "tips",
 )
 OFFICIAL_DOMAINS = (
   "ksponco.or.kr",
@@ -33,11 +37,16 @@ OFFICIAL_DOMAINS = (
   "kopis.or.kr",
 )
 SOCIAL_DOMAINS = (
+  "facebook.com",
   "instagram.com",
   "threads.com",
   "threads.net",
+  "tiktok.com",
   "x.com",
   "twitter.com",
+  "vm.tiktok.com",
+  "vt.tiktok.com",
+  "weverse.io",
   "youtube.com",
   "youtu.be",
 )
@@ -68,6 +77,10 @@ PUBLIC_SOCIAL_HINTS = (
   "직캠",
   "vlog",
   "브이로그",
+  "관람팁",
+  "꿀팁",
+  "tip",
+  "tips",
 )
 LATEST_CHECK_HINTS = (
   "입장 시간",

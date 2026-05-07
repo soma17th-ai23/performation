@@ -18,7 +18,7 @@ Use this skill for search query design, public web evidence collection, source c
 
 1. Classify the user input as concert name, venue name, or detail question.
 2. Generate search queries that separate official pages from public review pages.
-3. Prefer sources in this order: venue official page, ticket seller or event notice, public data or transit source, public blogs or reviews, general search snippets.
+3. Prefer sources in this order: venue official page, ticket seller or event notice, public data or transit source, public blogs or reviews, public-search-discovered SNS tip snippets, general search snippets.
 4. Deduplicate near-identical results before synthesis.
 5. Tag every evidence item with one source type:
    - `official_confirmed`
@@ -32,6 +32,7 @@ Use this skill for search query design, public web evidence collection, source c
 - Allowed: public web search through Tavily, Brave Search, or equivalent MCP/API.
 - Allowed: official venue pages, ticketing pages, public notices, public blogs, public search results.
 - Allowed: official SNS links discovered through public search result metadata/snippets, used as latest-check channels.
+- Allowed: public-review/SNS snippets discovered through public search, used only as anecdotal `후기 참고:` practical tips.
 - Excluded: direct crawling of X, Instagram, Threads, or login-restricted platforms.
 - Excluded: scraping copyrighted seat-view image collections for the MVP.
 
@@ -40,6 +41,7 @@ Use this skill for search query design, public web evidence collection, source c
 - If the search provider fails, record the error category and return local venue data only.
 - If results are sparse, mark missing evidence clearly.
 - If public reviews conflict with official information, official information wins.
+- If public tips are used, keep them labeled as reference and avoid presenting them as official operations.
 
 ## Validation
 

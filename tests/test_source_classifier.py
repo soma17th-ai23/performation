@@ -100,6 +100,20 @@ def test_fan_sns_review_stays_public_reference() -> None:
   assert "참고용" in reason
 
 
+def test_tiktok_tip_post_stays_public_reference() -> None:
+  label, reason = classify_search_result(
+    {
+      "title": "KSPO DOME 스탠딩 입장 꿀팁",
+      "url": "https://www.tiktok.com/@concert_tip/video/example",
+      "snippet": "입장 대기와 스탠딩 관람팁을 정리한 영상입니다.",
+      "query": "KSPO DOME 입장 대기 스탠딩 후기",
+    }
+  )
+
+  assert label == ConfidenceLabel.PUBLIC_REVIEW_REFERENCE
+  assert "참고용" in reason
+
+
 def test_unknown_source_remains_uncertain() -> None:
   label, reason = classify_search_result(
     {
