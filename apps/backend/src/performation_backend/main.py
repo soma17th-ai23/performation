@@ -61,6 +61,8 @@ def health() -> dict[str, str]:
 @app.post("/analyze", response_model=GuideResponse)
 async def create_guide(request: GuideRequest) -> GuideResponse | JSONResponse:
   try:
+    # NOTE: 타임아웃 발생 시 스레드는 즉시 중단되지 않고 완료될 때까지 계속 실행됩니다
+    # (Thread Leakage). generate_visit_guide가 async로 전환되면 해소 가능합니다.
     return await asyncio.wait_for(
       asyncio.to_thread(generate_visit_guide, request.query),
       timeout=_AGENT_TIMEOUT,
