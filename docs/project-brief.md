@@ -50,6 +50,7 @@ Included:
 - local venue basics
 - source and confidence labels
 - visit-prep checklist
+- in-memory provider-result caching for repeated public search, KOPIS, and LLM calls
 
 ## Application Boundary
 

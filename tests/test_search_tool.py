@@ -10,6 +10,7 @@ from performation_agent.tools.search import (
   build_search_provider_from_env,
   search_with_fallback,
 )
+from performation_agent.tools.cache import clear_agent_caches
 
 
 def test_search_with_fallback_returns_empty_without_provider(monkeypatch) -> None:
@@ -162,3 +163,89 @@ def test_search_with_fallback_dedupes_urls_and_keeps_fallback_on_error() -> None
 
   assert len(search_with_fallback([query], provider=DuplicateProvider())) == 1
   assert search_with_fallback([query], provider=FailingProvider()) == []
+
+
+def test_search_with_fallback_caches_successful_provider_results() -> None:
+  clear_agent_caches()
+
+  class CountingProvider:
+    def __init__(self) -> None:
+      self.calls = 0
+
+    def search(self, search_query, *, max_results):
+      self.calls += 1
+      return [
+        {
+          "title": "캐시 결과",
+          "url": "https://example.com/cache",
+          "snippet": f"{search_query['query']} {self.calls}",
+          "query": search_query["query"],
+        }
+      ]
+
+  provider = CountingProvider()
+  query = {"query": "워터밤 관람 후기 꿀팁", "purpose": "review_tips"}
+  env = {"PERFORMATION_SEARCH_CACHE_TTL_SECONDS": "60"}
+
+  first = search_with_fallback([query], provider=provider, env=env)
+  second = search_with_fallback([query], provider=provider, env=env)
+
+  assert first == second
+  assert provider.calls == 1
+
+
+def test_search_cache_can_be_disabled() -> None:
+  clear_agent_caches()
+
+  class CountingProvider:
+    def __init__(self) -> None:
+      self.calls = 0
+
+    def search(self, search_query, *, max_results):
+      self.calls += 1
+      return []
+
+  provider = CountingProvider()
+  query = {"query": "워터밤 관람 후기 꿀팁", "purpose": "review_tips"}
+  env = {"PERFORMATION_CACHE_ENABLED": "false"}
+
+  search_with_fallback([query], provider=provider, env=env)
+  search_with_fallback([query], provider=provider, env=env)
+
+  assert provider.calls == 2
+
+
+def test_search_cache_does_not_cache_provider_errors() -> None:
+  clear_agent_caches()
+
+  class FlakyProvider:
+    def __init__(self) -> None:
+      self.calls = 0
+
+    def search(self, search_query, *, max_results):
+      self.calls += 1
+      if self.calls == 1:
+        raise httpx.TimeoutException("timeout")
+      return [
+        {
+          "title": "복구 결과",
+          "url": "https://example.com/recovered",
+          "snippet": "두 번째 호출 성공",
+          "query": search_query["query"],
+        }
+      ]
+
+  provider = FlakyProvider()
+  query = {"query": "워터밤 관람 후기 꿀팁", "purpose": "review_tips"}
+  env = {"PERFORMATION_SEARCH_CACHE_TTL_SECONDS": "60"}
+
+  assert search_with_fallback([query], provider=provider, env=env) == []
+  assert search_with_fallback([query], provider=provider, env=env) == [
+    {
+      "title": "복구 결과",
+      "url": "https://example.com/recovered",
+      "snippet": "두 번째 호출 성공",
+      "query": "워터밤 관람 후기 꿀팁",
+    }
+  ]
+  assert provider.calls == 2

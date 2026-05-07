@@ -14,6 +14,7 @@ from performation_agent.tools.kopis import (
   build_kopis_provider_from_env,
   search_kopis_with_fallback,
 )
+from performation_agent.tools.cache import clear_agent_caches
 
 __all__ = [
   "BraveSearchProvider",
@@ -23,6 +24,7 @@ __all__ = [
   "build_guide_draft_provider_from_env",
   "build_kopis_provider_from_env",
   "build_search_provider_from_env",
+  "clear_agent_caches",
   "generate_guide_draft_with_fallback",
   "search_kopis_with_fallback",
   "search_with_fallback",

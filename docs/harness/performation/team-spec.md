@@ -120,6 +120,7 @@ apps/frontend -> apps/backend -> packages/agent -> packages/venue-data
 
 - Search API unavailable: return local venue-data guide only and mark web evidence unavailable.
 - KOPIS API unavailable or unconfigured: skip official performance lookup and continue with public search plus local venue data.
+- Provider cache disabled or cold: call the configured provider normally and cache only successful results.
 - SNS source unavailable or login-gated: use only public search result metadata/snippets; present official SNS links as latest-check channels and public SNS/review tips as anecdotal references, not as directly crawled data.
 - Sparse search results: say enough public information was not found and avoid inventing details.
 - Concert-name-only input: infer an MVP venue from public search only when exactly one supported venue is found.

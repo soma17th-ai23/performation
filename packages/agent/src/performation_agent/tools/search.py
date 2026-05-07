@@ -7,6 +7,12 @@ from typing import Protocol
 import httpx
 
 from performation_agent.state import SearchQuery, SearchResult
+from performation_agent.tools.cache import (
+  DEFAULT_SEARCH_CACHE_TTL_SECONDS,
+  cache_max_items,
+  cache_ttl_seconds,
+  get_or_set_cached,
+)
 
 
 TAVILY_SEARCH_URL = "https://api.tavily.com/search"
@@ -126,14 +132,12 @@ def search_with_fallback(
 
   max_results = _max_results_per_query(env)
   try:
-    results: list[SearchResult] = []
-    for search_query in search_queries:
-      results.extend(
-        selected_provider.search(
-          search_query,
-          max_results=max_results,
-        )
-      )
+    results = _cached_search_results(
+      selected_provider,
+      search_queries,
+      max_results=max_results,
+      env=env,
+    )
     return _dedupe_results(results)
   except (httpx.HTTPError, ValueError):
     return []
@@ -171,6 +175,38 @@ def _max_results_per_query(env: Mapping[str, str] | None) -> int:
   except ValueError:
     configured = DEFAULT_MAX_RESULTS_PER_QUERY
   return min(max(configured, 1), 10)
+
+
+def _cached_search_results(
+  provider: SearchProvider,
+  search_queries: list[SearchQuery],
+  *,
+  max_results: int,
+  env: Mapping[str, str] | None,
+) -> list[SearchResult]:
+  provider_key = _provider_cache_key(provider)
+  results: list[SearchResult] = []
+  for search_query in search_queries:
+    key_parts = {
+      "provider": provider_key,
+      "query": search_query["query"],
+      "purpose": search_query["purpose"],
+      "max_results": max_results,
+    }
+    results.extend(
+      get_or_set_cached(
+        "public_search",
+        key_parts,
+        ttl_seconds=cache_ttl_seconds(env, "PERFORMATION_SEARCH_CACHE_TTL_SECONDS", DEFAULT_SEARCH_CACHE_TTL_SECONDS),
+        max_items=cache_max_items(env),
+        factory=lambda search_query=search_query: provider.search(search_query, max_results=max_results),
+      )
+    )
+  return results
+
+
+def _provider_cache_key(provider: SearchProvider) -> str:
+  return f"{type(provider).__module__}.{type(provider).__qualname__}"
 
 
 def _dedupe_results(results) -> list[SearchResult]:
