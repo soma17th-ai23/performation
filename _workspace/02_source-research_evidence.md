@@ -5,16 +5,24 @@
 - Inputs checked: `랩비트 페스티벌`, `워터밤`, `EK 콘서트`, KOPIS OpenAPI contract
 - Goal: verify whether generated event candidates match current public/official evidence and define KOPIS as an official performance data source.
 - SNS extension: handle official SNS notice links found through public search result metadata/snippets without direct SNS crawling.
+- Public-review tip extension: use blog/review/SNS snippets found through public search for practical visit tips while keeping them anecdotal.
 
 ## SNS Source Contract
 
 - Search query suffix: `공식 SNS 공지`
+- Public-review query suffixes: `관람 후기 꿀팁`, `입장 대기 스탠딩 후기`, `물품보관 퇴장 교통 후기`
 - Allowed input: public search result title, URL, and snippet from SNS domains.
 - Excluded input: authenticated SNS pages, comments, profile crawling, infinite scroll scraping, or login-gated content.
 - Classification:
   - official SNS notice/account hint -> `latest_official_check_required`
   - generic SNS post without official hint -> `uncertain`
   - fan, vlog, review, or repost-style SNS result -> `public_review_reference`
+  - public blog/review/SNS practical tips -> `public_review_reference`
+- Tip synthesis:
+  - use only title/snippet/query metadata returned by the search provider
+  - express tips with `후기 참고:` so they are not mistaken for official operations
+  - supported tip categories: entry/standing, locker, exit/transit, preparation
+  - official sources still win when review tips conflict with official notices
 
 ## KOPIS Contract
 
@@ -50,3 +58,4 @@
 - KOPIS event candidates include non-MVP regional options when official title regions are present, such as `워터밤 [속초]`.
 - KOPIS search now expands known Korean event aliases, so `랩비트` also tries `RAPBEAT`, `RAP BEAT`, `RAPBEAT FESTIVAL`, and `RAP BEAT FESTIVAL`.
 - Official SNS notice results can feed candidate/event extraction, but remain latest-check evidence instead of becoming `official_confirmed`.
+- Public review/SNS tip results feed only practical tips, not official facts or venue/event extraction.

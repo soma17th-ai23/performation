@@ -3,7 +3,7 @@
 ## Commands
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 93 passed
+- `uv run --python 3.11 pytest` - pass, 99 passed
 - `git diff --check` - pass
 - `.env` loaded in-process + `generate_visit_guide("워터밤")` - pass
 - `.env` loaded in-process + FastAPI `TestClient` smoke for `/health` and `/guides` - pass
@@ -18,6 +18,9 @@
 - KOPIS-backed `워터밤` duplicate-merge regression smoke - pass
 - Extra live examples with Tavily+Gemini and KOPIS configured through runtime env: `세븐틴 콘서트`, `에스파 콘서트`, `블랙핑크 콘서트`, `뮤지컬 알라딘`, `서울재즈페스티벌`, `펜타포트 락 페스티벌` - pass
 - KOPIS-backed `서울재즈페스티벌` venue suffix cleanup smoke - pass
+- Unit scenarios for public review/SNS tip queries, TikTok tip classification, and `후기 참고:` tip injection - pass
+- Live review-tip smoke with Tavily+Gemini and KOPIS configured through runtime env: `KSPO DOME 스탠딩`, `YES24 Live Hall 물품보관`, `워터밤 준비물 꿀팁` - pass
+- Review-tip cap/dedupe regression for LLM output - pass
 
 ## Scenarios
 
@@ -43,6 +46,9 @@
 | live extra | `서울재즈페스티벌` | `event_candidates` | KOPIS 공식 후보 반환, `올림픽공원 티켓` venue suffix 정제 및 중복 병합 확인 |
 | live extra | `펜타포트 락 페스티벌` | `event_candidates` | KOPIS 기준 인천/송도달빛축제공원 공식 후보 반환 |
 | SNS source | `랩비트 페스티벌 공식 SNS 공지` | `latest_official_check_required` | 공개 검색 결과의 공식 SNS 공지는 후보 추론에 사용하되 공식 확정으로 과승격하지 않음 |
+| review tip | `KSPO DOME 스탠딩` | `venue_with_detail_question` | 후기/SNS 검색 결과가 있을 때 `후기 참고:` 입장 대기·물품보관 팁을 추가 |
+| review tip | `YES24 Live Hall 물품보관` | `venue_with_detail_question` | 물품보관·퇴장·준비물 후기 팁을 참고용으로 추가 |
+| review tip | `워터밤 준비물 꿀팁` | `unsupported_or_ambiguous` | 공식 후보를 강제하지 않고 후기 기반 준비물/물품보관/퇴장/입장 팁 4개만 표시 |
 
 ## Risks
 

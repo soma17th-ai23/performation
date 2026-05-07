@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from performation_agent.state import GuideState
-from performation_agent.tools.guide_draft import build_deterministic_guide_draft
+from performation_agent.tools.guide_draft import apply_public_review_tips, build_deterministic_guide_draft
 from performation_agent.tools.llm import generate_guide_draft_with_fallback
 
 
@@ -20,6 +20,7 @@ def summarize_information(state: GuideState) -> GuideState:
 
   fallback_draft = build_deterministic_guide_draft(state)
   draft, llm_used = generate_guide_draft_with_fallback(state, fallback_draft)
+  draft = apply_public_review_tips(draft, state)
   summary = _prepend_event_info_summary(state, draft["summary"])
   return {
     "summary": summary,

@@ -1053,6 +1053,30 @@ def test_search_queries_include_official_sns_notice_lookup() -> None:
   } in result["search_queries"]
 
 
+def test_search_queries_include_public_review_tip_lookups() -> None:
+  result = build_search_queries(
+    {
+      "query": "KSPO DOME 콘서트 준비물",
+      "input_intent": "concert_detail_question",
+      "venue": VenueInfo(name="KSPO DOME"),
+    }
+  )
+
+  queries = result["search_queries"]
+  assert {
+    "query": "KSPO DOME KSPO DOME 콘서트 준비물 관람 후기 꿀팁",
+    "purpose": "review_tips",
+  } in queries
+  assert {
+    "query": "KSPO DOME KSPO DOME 콘서트 준비물 입장 대기 스탠딩 후기",
+    "purpose": "review_entry",
+  } in queries
+  assert {
+    "query": "KSPO DOME KSPO DOME 콘서트 준비물 물품보관 퇴장 교통 후기",
+    "purpose": "review_logistics",
+  } in queries
+
+
 def test_classify_sources_assigns_confidence_after_search() -> None:
   result = classify_sources(
     {
@@ -1091,6 +1115,29 @@ def test_classify_sources_marks_latest_check_items() -> None:
   assert "최신 공식 확인" in classified_source["reason"]
 
 
+def test_summarize_information_adds_public_review_tips() -> None:
+  result = summarize_information(
+    {
+      "query": "KSPO DOME 스탠딩",
+      "input_type": "venue_with_detail_question",
+      "venue": VenueInfo(name="KSPO DOME", event_check_items=["공연별 입장 시간 확인"]),
+      "search_results": [
+        {
+          "title": "KSPO DOME 스탠딩 입장 후기",
+          "url": "https://example.tistory.com/kspo-standing",
+          "snippet": "스탠딩 입장 대기와 물품보관 꿀팁을 정리했습니다.",
+          "query": "KSPO DOME 입장 대기 스탠딩 후기",
+        }
+      ],
+    }
+  )
+
+  assert any(tip.startswith("후기 참고:") for tip in result["transit_and_entry_tips"])
+  assert any("스탠딩/입장 대기" in tip for tip in result["transit_and_entry_tips"])
+  assert any("물품보관" in tip for tip in result["transit_and_entry_tips"])
+  assert result["official_check_required"] == ["공연별 입장 시간 확인"]
+
+
 def test_summarize_information_accepts_llm_draft(monkeypatch) -> None:
   def fake_generate_guide_draft_with_fallback(state, fallback_draft):
     return (
@@ -1111,3 +1158,80 @@ def test_summarize_information_accepts_llm_draft(monkeypatch) -> None:
   assert result["summary"] == ["AI 요약"]
   assert result["checklist"] == ["AI 체크리스트"]
   assert result["llm_used"] is True
+
+
+def test_summarize_information_preserves_public_review_tips_with_llm(monkeypatch) -> None:
+  def fake_generate_guide_draft_with_fallback(state, fallback_draft):
+    return (
+      {
+        "summary": ["AI 요약"],
+        "checklist": ["AI 체크리스트"],
+        "transit_and_entry_tips": ["AI 팁"],
+        "official_check_required": ["AI 공식 확인"],
+      },
+      True,
+    )
+
+  summarize_module = importlib.import_module("performation_agent.nodes.summarize_information")
+  monkeypatch.setattr(summarize_module, "generate_guide_draft_with_fallback", fake_generate_guide_draft_with_fallback)
+
+  result = summarize_module.summarize_information(
+    {
+      "query": "YES24 Live Hall 물품보관",
+      "venue": VenueInfo(name="YES24 Live Hall"),
+      "search_results": [
+        {
+          "title": "YES24 Live Hall 물품보관 후기",
+          "url": "https://m.blog.naver.com/example/1",
+          "snippet": "물품보관 대기와 퇴장 교통 꿀팁을 정리했습니다.",
+          "query": "YES24 Live Hall 물품보관 퇴장 교통 후기",
+        }
+      ],
+    }
+  )
+
+  assert result["llm_used"] is True
+  assert result["transit_and_entry_tips"][0] == "AI 팁"
+  assert any(tip.startswith("후기 참고:") for tip in result["transit_and_entry_tips"])
+
+
+def test_summarize_information_dedupes_and_caps_public_review_tips(monkeypatch) -> None:
+  def fake_generate_guide_draft_with_fallback(state, fallback_draft):
+    return (
+      {
+        "summary": ["AI 요약"],
+        "checklist": ["AI 체크리스트"],
+        "transit_and_entry_tips": [
+          "후기 참고: 스탠딩 입장 대기는 일찍 확인하세요.",
+          "후기 참고: 물품보관은 빨리 마감될 수 있어요.",
+          "후기 참고: 공연 종료 후 지하철 혼잡을 예상하세요.",
+          "후기 참고: 보조배터리와 신분증을 챙기세요.",
+          "후기 참고: 주변 편의점 위치를 확인하세요.",
+          "후기 참고: 식사는 미리 하고 오세요.",
+          "후기 참고: 우비를 챙기세요.",
+        ],
+        "official_check_required": ["AI 공식 확인"],
+      },
+      True,
+    )
+
+  summarize_module = importlib.import_module("performation_agent.nodes.summarize_information")
+  monkeypatch.setattr(summarize_module, "generate_guide_draft_with_fallback", fake_generate_guide_draft_with_fallback)
+
+  result = summarize_module.summarize_information(
+    {
+      "query": "워터밤 준비물 꿀팁",
+      "search_results": [
+        {
+          "title": "워터밤 물품보관 후기",
+          "url": "https://blog.naver.com/example/1",
+          "snippet": "물품보관과 퇴장 교통 꿀팁입니다.",
+          "query": "워터밤 물품보관 퇴장 교통 후기",
+        }
+      ],
+    }
+  )
+
+  review_tips = [tip for tip in result["transit_and_entry_tips"] if tip.startswith("후기 참고:")]
+  assert len(review_tips) == 6
+  assert sum("물품보관" in tip for tip in review_tips) == 1

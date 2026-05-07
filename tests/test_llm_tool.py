@@ -11,7 +11,7 @@ from performation_agent.tools.llm import (
   build_guide_prompt,
   generate_guide_draft_with_fallback,
 )
-from performation_domain import VenueInfo
+from performation_domain import ConfidenceLabel, Source, VenueInfo
 
 
 FALLBACK_DRAFT = {
@@ -135,6 +135,40 @@ def test_build_guide_prompt_includes_sources_but_not_secrets() -> None:
   assert "GEMINI_API_KEY" not in prompt
   assert "KSPO DOME 준비물" in prompt
   assert "fallback summary" in prompt
+  assert "후기/SNS 기반 팁은 최대 4개" in prompt
+
+
+def test_build_guide_prompt_includes_public_review_tip_candidates() -> None:
+  prompt = build_guide_prompt(
+    {
+      "query": "KSPO DOME 스탠딩",
+      "input_type": "venue_with_detail_question",
+      "classified_sources": [
+        {
+          "source": Source(
+            title="KSPO DOME 스탠딩 후기",
+            url="https://example.tistory.com/kspo-standing",
+            source_type=ConfidenceLabel.PUBLIC_REVIEW_REFERENCE,
+            used_for=["KSPO DOME 입장 대기 스탠딩 후기"],
+          ),
+          "reason": "블로그/후기 성격의 공개 정보입니다.",
+        }
+      ],
+      "search_results": [
+        {
+          "title": "KSPO DOME 스탠딩 후기",
+          "url": "https://example.tistory.com/kspo-standing",
+          "snippet": "스탠딩 입장 대기 꿀팁",
+          "query": "KSPO DOME 입장 대기 스탠딩 후기",
+        }
+      ],
+    },
+    FALLBACK_DRAFT,
+  )
+
+  assert "public_review_results" in prompt
+  assert "public_review_tip_candidates" in prompt
+  assert "후기 참고: 스탠딩/입장 대기" in prompt
 
 
 def test_deterministic_draft_reflects_search_availability() -> None:

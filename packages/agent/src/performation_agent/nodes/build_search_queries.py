@@ -12,6 +12,9 @@ QUERY_PURPOSES = (
   ("교통 정보", "transit"),
   ("물품보관", "locker"),
   ("준비물 팁", "preparation"),
+  ("관람 후기 꿀팁", "review_tips"),
+  ("입장 대기 스탠딩 후기", "review_entry"),
+  ("물품보관 퇴장 교통 후기", "review_logistics"),
 )
 CANDIDATE_QUERY_INTENTS = {"venue_or_concert_name", "concert_or_event_name", "concert_detail_question"}
 
