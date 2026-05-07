@@ -33,7 +33,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     status_code=500,
     content=ErrorResponse(
       error_message="요청을 처리하는 중 오류가 발생했습니다.",
-      detail=str(exc) if str(exc) else None,
+      detail=None,
     ).model_dump(),
   )
 
