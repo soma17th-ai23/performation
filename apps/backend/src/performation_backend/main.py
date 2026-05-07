@@ -18,7 +18,7 @@ app = FastAPI(
 _origins = os.getenv("PERFORMATION_CORS_ORIGINS", "*")
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=_origins.split(",") if _origins != "*" else ["*"],
+  allow_origins=[origin.strip() for origin in _origins.split(",")],
   allow_methods=["*"],
   allow_headers=["*"],
 )
