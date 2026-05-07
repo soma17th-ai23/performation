@@ -16,13 +16,15 @@
   - practical tips are emitted as `후기 참고:`
   - public review/SNS tips remain `public_review_reference`
   - official-check items remain separate from anecdotal tips
+- Added review tips to performance-name-only flows, including broad `event_candidates` responses.
 - Updated LLM prompt payload with public-review snippets and tip candidates while keeping secrets out of prompts.
 - Added cap/dedupe handling so review tips do not flood the response when LLM output is verbose.
 
 ## Validation
 
-- `uv run --python 3.11 pytest tests/test_agent_workflow.py tests/test_source_classifier.py tests/test_llm_tool.py` - pass, 74 passed
-- `uv run --python 3.11 pytest` - pass, 99 passed
+- `uv run --python 3.11 pytest tests/test_agent_workflow.py tests/test_source_classifier.py tests/test_llm_tool.py` - pass, 75 passed
+- `uv run --python 3.11 pytest` - pass, 100 passed
 - `python3 scripts/validate_harness.py` - pass
 - `git diff --check` - pass
 - Live smoke covered `KSPO DOME 스탠딩`, `YES24 Live Hall 물품보관`, and `워터밤 준비물 꿀팁` with Tavily+Gemini and KOPIS configured through runtime env.
+- Performance-name-only smoke covered `워터밤` and `세븐틴 콘서트`.

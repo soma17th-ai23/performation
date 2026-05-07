@@ -3,7 +3,7 @@
 ## Commands
 
 - `python3 scripts/validate_harness.py` - pass
-- `uv run --python 3.11 pytest` - pass, 99 passed
+- `uv run --python 3.11 pytest` - pass, 100 passed
 - `git diff --check` - pass
 - `.env` loaded in-process + `generate_visit_guide("워터밤")` - pass
 - `.env` loaded in-process + FastAPI `TestClient` smoke for `/health` and `/guides` - pass
@@ -20,6 +20,7 @@
 - KOPIS-backed `서울재즈페스티벌` venue suffix cleanup smoke - pass
 - Unit scenarios for public review/SNS tip queries, TikTok tip classification, and `후기 참고:` tip injection - pass
 - Live review-tip smoke with Tavily+Gemini and KOPIS configured through runtime env: `KSPO DOME 스탠딩`, `YES24 Live Hall 물품보관`, `워터밤 준비물 꿀팁` - pass
+- Performance-name-only review-tip smoke with Tavily+Gemini and KOPIS configured through runtime env: `워터밤`, `세븐틴 콘서트` - pass
 - Review-tip cap/dedupe regression for LLM output - pass
 
 ## Scenarios
@@ -49,6 +50,8 @@
 | review tip | `KSPO DOME 스탠딩` | `venue_with_detail_question` | 후기/SNS 검색 결과가 있을 때 `후기 참고:` 입장 대기·물품보관 팁을 추가 |
 | review tip | `YES24 Live Hall 물품보관` | `venue_with_detail_question` | 물품보관·퇴장·준비물 후기 팁을 참고용으로 추가 |
 | review tip | `워터밤 준비물 꿀팁` | `unsupported_or_ambiguous` | 공식 후보를 강제하지 않고 후기 기반 준비물/물품보관/퇴장/입장 팁 4개만 표시 |
+| review tip | `워터밤` | `event_candidates` | 공연명만 입력해도 후보와 후기 기반 준비물/퇴장/물품보관/입장 팁을 같이 표시 |
+| review tip | `세븐틴 콘서트` | `concert_with_inferred_venue` | 공연명만 입력해도 MVP 공연장 추론 결과와 후기 기반 꿀팁을 같이 표시 |
 
 ## Risks
 

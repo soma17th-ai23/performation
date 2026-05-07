@@ -13,7 +13,7 @@ from performation_agent.nodes.load_venue_data import load_venue_data
 from performation_agent.nodes.search_kopis_official import search_kopis_official
 from performation_agent.nodes.summarize_information import summarize_information
 from performation_agent.workflow import NODE_SEQUENCE
-from performation_domain import ConfidenceLabel, EventInfo, VenueInfo
+from performation_domain import ConfidenceLabel, EventCandidate, EventInfo, VenueInfo
 
 
 def test_workflow_has_expected_node_sequence() -> None:
@@ -1136,6 +1136,33 @@ def test_summarize_information_adds_public_review_tips() -> None:
   assert any("스탠딩/입장 대기" in tip for tip in result["transit_and_entry_tips"])
   assert any("물품보관" in tip for tip in result["transit_and_entry_tips"])
   assert result["official_check_required"] == ["공연별 입장 시간 확인"]
+
+
+def test_summarize_event_candidates_adds_public_review_tips_for_concert_name() -> None:
+  result = summarize_information(
+    {
+      "query": "워터밤",
+      "input_type": "event_candidates",
+      "venue": None,
+      "event_candidates": [EventCandidate(name="워터밤 서울", region="서울")],
+      "search_results": [
+        {
+          "title": "워터밤 준비물 꿀팁 후기",
+          "url": "https://blog.naver.com/waterbomb-tip",
+          "snippet": "준비물, 물품보관, 퇴장 교통 후기와 입장 대기 팁입니다.",
+          "query": "워터밤 관람 후기 꿀팁",
+        }
+      ],
+    }
+  )
+
+  assert result["summary"][0] == "검색 결과에서 공연 후보가 확인되었습니다."
+  assert "방문하려는 지역/날짜 후보 선택하기" in result["checklist"]
+  assert any(tip.startswith("후기 참고:") for tip in result["transit_and_entry_tips"])
+  assert any("보조배터리" in tip for tip in result["transit_and_entry_tips"])
+  assert any("물품보관" in tip for tip in result["transit_and_entry_tips"])
+  assert result["official_check_required"] == ["공연 지역", "공연 날짜", "공연 장소", "입장 시간"]
+  assert result["llm_used"] is False
 
 
 def test_summarize_information_accepts_llm_draft(monkeypatch) -> None:
