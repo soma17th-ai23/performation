@@ -26,7 +26,7 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-_AGENT_TIMEOUT = float(os.getenv("PERFORMATION_AGENT_TIMEOUT_SECONDS", "30"))
+_AGENT_TIMEOUT = float(os.getenv("PERFORMATION_AGENT_TIMEOUT_SECONDS") or 30)
 
 
 @app.exception_handler(RequestValidationError)
