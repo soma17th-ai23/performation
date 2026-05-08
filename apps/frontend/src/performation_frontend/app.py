@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 import gradio as gr
 from performation_domain import (
     EventCandidate,
@@ -121,14 +123,17 @@ def render_candidate_section(candidates: list[EventCandidate]) -> list[str]:
     return lines
 
 
-def on_submit(query, chat_history, session_data, session_id):
+def on_submit(
+    query: str,
+    chat_history: list[dict[str, str]],
+    session_data: dict[str, dict],
+    session_id: str | None,
+):
     query = query.strip()
     if not query:
         return "", chat_history, session_data, session_id, gr.update()
 
     if session_id is None:
-        import uuid
-
         session_id = str(uuid.uuid4())
         session_data[session_id] = {"title": query[:20], "history": []}
 
