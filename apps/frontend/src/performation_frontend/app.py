@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import os
-from typing import Any
-
 import gradio as gr
-import httpx
+from performation_domain import (
+  EventCandidate,
+  EventInfo,
+  GuideResponse,
+  Source,
+)
 
-
-API_URL = os.getenv("PERFORMATION_API_URL", "http://127.0.0.1:8000").rstrip("/")
+from performation_frontend.api import PerformationAPIError, get_guide
 
 
 def request_guide(query: str) -> str:
@@ -16,74 +17,82 @@ def request_guide(query: str) -> str:
     return "공연명 또는 공연장명을 입력해주세요."
 
   try:
-    response = httpx.post(f"{API_URL}/guides", json={"query": query}, timeout=30.0)
-    response.raise_for_status()
-  except httpx.HTTPError as exc:
-    return f"백엔드 API 호출에 실패했습니다: {exc}"
+    data = get_guide(query)
+  except PerformationAPIError as exc:
+    return str(exc)
 
-  return render_guide_markdown(response.json())
+  return render_guide_markdown(data)
 
 
-def render_guide_markdown(guide: dict[str, Any]) -> str:
-  venue = guide.get("venue") or {}
-  event_info = guide.get("event_info") or {}
-  candidates = guide.get("event_candidates") or []
-  sources = guide.get("sources") or []
+def render_guide_markdown(guide: GuideResponse) -> str:
+  venue = guide.venue
+  event_info = guide.event_info
+  candidates = guide.event_candidates
+  sources = guide.sources
 
   sections = [
     "# 공연 관람 준비 가이드",
-    f"**입력:** {guide.get('input', '')}",
+    f"**입력:** {guide.input}",
     "",
     "## 공연장 기본 정보",
-    f"- 공연장: {venue.get('name', '지원 범위 밖 또는 확인 필요')}",
-    f"- 주소: {venue.get('address', '확인 필요')}",
-    f"- 가까운 역: {venue.get('nearest_station', '확인 필요')}",
+  ]
+
+  if venue:
+    sections.extend([
+      f"- 공연장: {venue.name}",
+      f"- 주소: {venue.address or '확인 필요'}",
+      f"- 가까운 역: {venue.nearest_station or '확인 필요'}",
+    ])
+  else:
+    sections.append("- 공연장: 지원 범위 밖 또는 확인 필요")
+
+  sections.extend([
     "",
     *render_event_info_section(event_info),
     "",
     "## 관람 전 핵심 요약",
-    *[f"- {item}" for item in guide.get("summary", [])],
+    *[f"- {item}" for item in guide.summary],
     "",
     *render_candidate_section(candidates),
     "",
     "## 준비물 체크리스트",
-    *[f"- [ ] {item}" for item in guide.get("checklist", [])],
+    *[f"- [ ] {item}" for item in guide.checklist],
     "",
     "## 교통 및 입장 팁",
-    *[f"- {item}" for item in guide.get("transit_and_entry_tips", [])],
+    *[f"- {item}" for item in guide.transit_and_entry_tips],
     "",
     "## 공식 확인 필요 항목",
-    *[f"- {item}" for item in guide.get("official_check_required", [])],
+    *[f"- {item}" for item in guide.official_check_required],
     "",
     "## 참고 출처",
     *[
-      f"- {source.get('title', '출처')} ({source.get('source_type', 'uncertain')}): {source.get('url', '')}"
+      f"- {source.title or '출처'} ({source.source_type.value}): {source.url}"
       for source in sources
     ],
     "",
     "## 신뢰도 메모",
-    *[f"- {item}" for item in guide.get("confidence_notes", [])],
-  ]
+    *[f"- {item}" for item in guide.confidence_notes],
+  ])
 
   return "\n".join(sections)
 
 
-def render_event_info_section(event_info: dict[str, Any]) -> list[str]:
+def render_event_info_section(event_info: EventInfo | None) -> list[str]:
   if not event_info:
     return []
   rows = [
-    ("공연명", event_info.get("title", "")),
-    ("날짜", event_info.get("date_text", "")),
-    ("시간", event_info.get("time_text", "")),
-    ("장소", event_info.get("venue_name", "")),
-    ("신뢰도", event_info.get("confidence_label", "")),
+    ("공연명", event_info.title),
+    ("날짜", event_info.date_text),
+    ("시간", event_info.time_text),
+    ("장소", event_info.venue_name),
+    ("신뢰도", event_info.confidence_label.value if event_info.confidence_label else ""),
   ]
   lines = ["## 공연 정보"]
   lines.extend(f"- {label}: {value}" for label, value in rows if value)
   return lines
 
 
-def render_candidate_section(candidates: list[dict[str, Any]]) -> list[str]:
+def render_candidate_section(candidates: list[EventCandidate]) -> list[str]:
   if not candidates:
     return []
   lines = ["## 공연 후보"]
@@ -91,14 +100,14 @@ def render_candidate_section(candidates: list[dict[str, Any]]) -> list[str]:
     meta = " / ".join(
       item
       for item in (
-        candidate.get("region", ""),
-        candidate.get("date_text", ""),
-        candidate.get("venue_name", ""),
+        candidate.region,
+        candidate.date_text,
+        candidate.venue_name,
       )
       if item
     )
-    label = candidate.get("name", "후보")
-    confidence = candidate.get("confidence_label", "uncertain")
+    label = candidate.name or "후보"
+    confidence = candidate.confidence_label.value if candidate.confidence_label else ""
     suffix = f" - {meta}" if meta else ""
     lines.append(f"- {label}{suffix} ({confidence})")
   return lines

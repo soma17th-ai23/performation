@@ -50,10 +50,10 @@ Run backend:
 PYTHONPATH=apps/backend/src:packages/agent/src:packages/domain/src:packages/venue-data/src uv run --python 3.11 uvicorn performation_backend.main:app --reload
 ```
 
-Run frontend in another terminal:
+Run frontend:
 
 ```bash
-PYTHONPATH=apps/frontend/src:packages/domain/src uv run --python 3.11 python -m performation_frontend.app
+PYTHONPATH=apps/frontend/src:packages/domain/src uv run --python 3.11 python -m performation_frontend.app --reload
 ```
 
 The frontend uses `PERFORMATION_API_URL` and defaults to `http://127.0.0.1:8000`.
