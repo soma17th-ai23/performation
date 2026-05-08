@@ -157,7 +157,7 @@ def on_submit(
     )
 
 
-def load_session(session_id, session_data):
+def load_session(session_id: str | None, session_data: dict[str, dict]):
     if session_id in session_data:
         return session_data[session_id]["history"], session_id
     return [], session_id
