@@ -6,9 +6,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_frontend_calls_backend_without_agent_imports() -> None:
   frontend_app = ROOT / "apps" / "frontend" / "src" / "performation_frontend" / "app.py"
-  content = frontend_app.read_text(encoding="utf-8")
+  frontend_api = ROOT / "apps" / "frontend" / "src" / "performation_frontend" / "api.py"
+  content = frontend_app.read_text(encoding="utf-8") + frontend_api.read_text(encoding="utf-8")
 
-  assert "httpx.post" in content
+  assert "httpx" in content
+  assert "PERFORMATION_API_URL" in content
   assert "performation_agent" not in content
   assert "performation_venue_data" not in content
 

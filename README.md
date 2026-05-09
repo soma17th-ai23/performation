@@ -56,7 +56,23 @@ Run frontend:
 PYTHONPATH=apps/frontend/src:packages/domain/src uv run --python 3.11 python -m performation_frontend.app --reload
 ```
 
-The frontend uses `PERFORMATION_API_URL` and defaults to `http://127.0.0.1:8000`.
+Run the integrated Docker Compose environment:
+
+```bash
+docker compose up --build
+```
+
+Open the frontend at `http://localhost:7860`. The backend health check is available at `http://localhost:8000/health`.
+
+Compose builds separate frontend and backend targets from the root `Dockerfile`. The backend owns the agent workflow and loads `packages/agent`, `packages/domain`, and `packages/venue-data` through `PYTHONPATH`; there is no separate agent service. The frontend container calls the backend over the Compose network at `http://backend:8000` by default.
+
+Optional API keys and provider settings can be placed in `.env`. To change host ports without changing container ports:
+
+```bash
+PERFORMATION_BACKEND_PORT=8001 PERFORMATION_FRONTEND_PORT=7861 docker compose up --build
+```
+
+For non-Docker local runs, the frontend uses `PERFORMATION_API_URL` and defaults to `http://127.0.0.1:8000`.
 
 Backend API contract:
 

@@ -24,6 +24,7 @@ REQUIRED_FILES = (
   "docs/harness/performation/scenario-matrix.md",
   "docs/harness/performation/git-policy.md",
   "apps/frontend/src/performation_frontend/app.py",
+  "apps/frontend/src/performation_frontend/api.py",
   "apps/backend/src/performation_backend/main.py",
   "packages/agent/src/performation_agent/workflow.py",
   "packages/agent/src/performation_agent/state.py",
@@ -165,9 +166,20 @@ def main() -> int:
   )
 
   frontend_app = assert_file("apps/frontend/src/performation_frontend/app.py")
-  assert_mentions(frontend_app, ("httpx.post", "PERFORMATION_API_URL"))
+  frontend_api = assert_file("apps/frontend/src/performation_frontend/api.py")
+  assert_mentions(frontend_api, ("httpx", "PERFORMATION_API_URL", "/guides"))
   assert_not_mentions(
     frontend_app,
+    (
+      "performation_agent",
+      "performation_venue_data",
+      "langgraph",
+      "TAVILY_API_KEY",
+      "BRAVE_SEARCH_API_KEY",
+    ),
+  )
+  assert_not_mentions(
+    frontend_api,
     (
       "performation_agent",
       "performation_venue_data",

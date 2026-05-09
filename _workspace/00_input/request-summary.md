@@ -2,21 +2,20 @@
 
 ## Issue
 
-- GitHub issue: #30 `[agent] 외부 검색/LLM 호출 캐싱 추가`
-- Branch: `codex/agent-provider-cache`
+- GitHub issue: #40 `chore: 프론트엔드/백엔드/AI 통합 docker compose 환경 구성`
+- Branch: `chore/docker-compose-setup`
 
 ## Scope
 
-- Add in-memory TTL caching for external provider calls.
-- Cache public search results, KOPIS official search results, and Gemini guide draft output.
-- Keep cache configurable with env vars for enable/disable, TTL, and max entries.
-- Do not cache provider failures or exceptions.
-- Avoid storing API keys or secrets in cache keys.
-- Preserve frontend -> backend -> agent dependency boundary.
+- Add Docker Compose support for running frontend and backend together.
+- Keep the agent workflow inside the backend service, matching the existing application boundary.
+- Avoid modifying existing Python application code unless required.
+- Surface optional KOPIS, public search, Gemini, cache, timeout, and logging environment variables.
+- Document local Compose startup, URLs, and host port overrides.
 
 ## Validation Plan
 
 - `python3 scripts/validate_harness.py`
 - `uv run --python 3.11 pytest`
-- Provider call-count regression tests
-- Repeated-query smoke with Tavily/Gemini/KOPIS runtime env when useful
+- `docker compose config`
+- Docker build/start smoke when Docker is available
