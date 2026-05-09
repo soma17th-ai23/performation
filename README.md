@@ -53,8 +53,11 @@ PYTHONPATH=apps/backend/src:packages/agent/src:packages/domain/src:packages/venu
 Run frontend:
 
 ```bash
-PYTHONPATH=apps/frontend/src:packages/domain/src uv run --python 3.11 python -m performation_frontend.app --reload
+PYTHONPATH=apps/frontend/src:packages/domain/src uv run --python 3.11 python -m performation_frontend.app
 ```
+
+The frontend binds to `127.0.0.1:7860` by default for local runs. Override with
+`GRADIO_SERVER_NAME` and `GRADIO_SERVER_PORT` when needed.
 
 Run the integrated Docker Compose environment:
 

@@ -30,8 +30,10 @@ CMD ["uvicorn", "performation_backend.main:app", "--host", "0.0.0.0", "--port", 
 FROM runtime AS frontend
 
 ENV PYTHONPATH="apps/frontend/src:packages/domain/src" \
-    PERFORMATION_API_URL="http://backend:8000"
+    PERFORMATION_API_URL="http://backend:8000" \
+    GRADIO_SERVER_NAME="0.0.0.0" \
+    GRADIO_SERVER_PORT="7860"
 
 EXPOSE 7860
 
-CMD ["python", "-c", "from performation_frontend.app import build_app; build_app().launch(server_name='0.0.0.0', server_port=7860)"]
+CMD ["python", "-m", "performation_frontend.app"]

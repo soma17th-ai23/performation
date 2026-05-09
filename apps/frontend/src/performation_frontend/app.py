@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import uuid
 
 import gradio as gr
@@ -168,7 +169,7 @@ def start_new_chat():
 
 
 def build_app() -> gr.Blocks:
-    with gr.Blocks(title="Performation", fill_height=True, css=CSS) as demo:
+    with gr.Blocks(title="Performation", fill_height=True) as demo:
         # State: { "session_id": { "title": str, "history": list } }
         sessions = gr.State({})
         current_session_id = gr.State(None)
@@ -223,5 +224,11 @@ def build_app() -> gr.Blocks:
     return demo
 
 
+def launch_app() -> None:
+    server_name = os.getenv("GRADIO_SERVER_NAME") or "127.0.0.1"
+    server_port = int(os.getenv("GRADIO_SERVER_PORT") or "7860")
+    build_app().launch(server_name=server_name, server_port=server_port, css=CSS)
+
+
 if __name__ == "__main__":
-    build_app().launch()
+    launch_app()
