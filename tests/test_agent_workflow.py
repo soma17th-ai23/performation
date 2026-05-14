@@ -1,6 +1,7 @@
 import importlib
 import logging
 from datetime import date
+from unittest.mock import patch
 
 from performation_agent import generate_visit_guide
 from performation_agent.nodes.analyze_input import analyze_input
@@ -92,6 +93,19 @@ def test_state_changes_summary_shows_only_changed_demo_fields() -> None:
   assert "search_queries:0->1" in changes
   assert "summary:0->1" in changes
   assert "search_results" not in changes
+
+
+def test_workflow_skips_summary_work_when_info_logging_disabled(caplog) -> None:
+  caplog.set_level(logging.WARNING, logger="performation.agent.workflow")
+
+  with patch("performation_agent.workflow._state_log_summary") as summary_mock, \
+       patch("performation_agent.workflow._state_changes_summary") as changes_mock:
+    guide = generate_visit_guide("KSPO DOME")
+
+  assert guide.venue is not None
+  summary_mock.assert_not_called()
+  changes_mock.assert_not_called()
+  assert not any("[workflow" in record.message for record in caplog.records)
 
 
 def test_search_kopis_official_merges_official_results() -> None:

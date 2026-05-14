@@ -82,7 +82,8 @@ def _logged_node(
 ) -> Callable[[GuideState], GuideState]:
   def wrapped(state: GuideState) -> GuideState:
     step = NODE_STEPS[node_name]
-    logger.info("[workflow %s] START %-24s", step, node_name)
+    if logger.isEnabledFor(logging.INFO):
+      logger.info("[workflow %s] START %-24s", step, node_name)
     started = time.monotonic()
     try:
       update = node(state)
@@ -92,15 +93,16 @@ def _logged_node(
       raise
 
     elapsed = time.monotonic() - started
-    merged_state = {**state, **update}
-    logger.info(
-      "[workflow %s] DONE  %-24s elapsed=%.2fs changes=%s | %s",
-      step,
-      node_name,
-      elapsed,
-      _state_changes_summary(state, merged_state),
-      _state_log_summary(merged_state),
-    )
+    if logger.isEnabledFor(logging.INFO):
+      merged_state = {**state, **update}
+      logger.info(
+        "[workflow %s] DONE  %-24s elapsed=%.2fs changes=%s | %s",
+        step,
+        node_name,
+        elapsed,
+        _state_changes_summary(state, merged_state),
+        _state_log_summary(merged_state),
+      )
     return update
 
   return wrapped
@@ -109,11 +111,14 @@ def _logged_node(
 def _state_log_summary(state: GuideState) -> str:
   snapshot = _state_log_snapshot(state)
   return (
-    "state: intent={intent} | type={input_type} | venue={venue} | "
-    "search={search_queries}q/{search_results}r | event={event_info}/{event_candidates}c | "
-    "guide={summary}s/{checklist}c/{transit_tips}t/{official_checks}o | sources={sources} | "
-    "fallback={fallback_used} | llm={llm_used} | response={response_ready}"
-  ).format(**snapshot)
+    f"state: intent={snapshot['intent']} | type={snapshot['input_type']} | venue={snapshot['venue']} | "
+    f"search={snapshot['search_queries']}q/{snapshot['search_results']}r | "
+    f"event={snapshot['event_info']}/{snapshot['event_candidates']}c | "
+    f"guide={snapshot['summary']}s/{snapshot['checklist']}c/{snapshot['transit_tips']}t/"
+    f"{snapshot['official_checks']}o | sources={snapshot['sources']} | "
+    f"fallback={snapshot['fallback_used']} | llm={snapshot['llm_used']} | "
+    f"response={snapshot['response_ready']}"
+  )
 
 
 def _state_changes_summary(before: GuideState, after: GuideState) -> str:
