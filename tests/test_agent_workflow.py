@@ -1,4 +1,5 @@
 import importlib
+import logging
 from datetime import date
 
 from performation_agent import generate_visit_guide
@@ -12,7 +13,7 @@ from performation_agent.nodes.infer_venue_from_search import infer_venue_from_se
 from performation_agent.nodes.load_venue_data import load_venue_data
 from performation_agent.nodes.search_kopis_official import search_kopis_official
 from performation_agent.nodes.summarize_information import summarize_information
-from performation_agent.workflow import NODE_SEQUENCE
+from performation_agent.workflow import NODE_SEQUENCE, _state_log_summary
 from performation_domain import ConfidenceLabel, EventCandidate, EventInfo, VenueInfo
 
 
@@ -31,6 +32,44 @@ def test_workflow_has_expected_node_sequence() -> None:
     "assign_confidence",
     "format_response",
   )
+
+
+def test_workflow_logs_node_start_and_completion(caplog) -> None:
+  caplog.set_level(logging.INFO, logger="performation.agent.workflow")
+
+  guide = generate_visit_guide("KSPO DOME")
+
+  assert guide.venue is not None
+  assert any("워크플로우 노드 시작: node=analyze_input" in record.message for record in caplog.records)
+  assert any("워크플로우 노드 완료: node=format_response" in record.message for record in caplog.records)
+  assert any("venue=KSPO DOME" in record.message for record in caplog.records)
+
+
+def test_state_log_summary_contains_demo_debug_fields() -> None:
+  summary = _state_log_summary(
+    {
+      "input_type": "venue_name",
+      "venue": VenueInfo(name="KSPO DOME"),
+      "search_queries": [{"query": "KSPO DOME 공식 정보", "purpose": "official"}],
+      "search_results": [
+        {
+          "title": "KSPO DOME",
+          "url": "https://example.com",
+          "snippet": "공식 정보",
+          "query": "KSPO DOME 공식 정보",
+        }
+      ],
+      "fallback_used": True,
+      "llm_used": False,
+    }
+  )
+
+  assert "input_type=venue_name" in summary
+  assert "venue=KSPO DOME" in summary
+  assert "search_queries=1" in summary
+  assert "search_results=1" in summary
+  assert "fallback_used=True" in summary
+  assert "llm_used=False" in summary
 
 
 def test_search_kopis_official_merges_official_results() -> None:
