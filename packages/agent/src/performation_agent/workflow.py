@@ -41,6 +41,10 @@ NODE_SEQUENCE = (
   "assign_confidence",
   "format_response",
 )
+NODE_STEPS = {
+  node_name: f"{index:02d}/{len(NODE_SEQUENCE):02d}"
+  for index, node_name in enumerate(NODE_SEQUENCE, start=1)
+}
 
 
 def generate_visit_guide(query: str) -> GuideResponse:
@@ -77,21 +81,24 @@ def _logged_node(
   node: Callable[[GuideState], GuideState],
 ) -> Callable[[GuideState], GuideState]:
   def wrapped(state: GuideState) -> GuideState:
-    logger.info("워크플로우 노드 시작: node=%s %s", node_name, _state_log_summary(state))
+    step = NODE_STEPS[node_name]
+    logger.info("[workflow %s] START %-24s", step, node_name)
     started = time.monotonic()
     try:
       update = node(state)
     except Exception:
       elapsed = time.monotonic() - started
-      logger.exception("워크플로우 노드 실패: node=%s elapsed=%.2fs", node_name, elapsed)
+      logger.exception("[workflow %s] FAIL  %-24s elapsed=%.2fs", step, node_name, elapsed)
       raise
 
     elapsed = time.monotonic() - started
     merged_state = {**state, **update}
     logger.info(
-      "워크플로우 노드 완료: node=%s elapsed=%.2fs %s",
+      "[workflow %s] DONE  %-24s elapsed=%.2fs changes=%s | %s",
+      step,
       node_name,
       elapsed,
+      _state_changes_summary(state, merged_state),
       _state_log_summary(merged_state),
     )
     return update
@@ -100,21 +107,46 @@ def _logged_node(
 
 
 def _state_log_summary(state: GuideState) -> str:
+  snapshot = _state_log_snapshot(state)
+  return (
+    "state: intent={intent} | type={input_type} | venue={venue} | "
+    "search={search_queries}q/{search_results}r | event={event_info}/{event_candidates}c | "
+    "guide={summary}s/{checklist}c/{transit_tips}t/{official_checks}o | sources={sources} | "
+    "fallback={fallback_used} | llm={llm_used} | response={response_ready}"
+  ).format(**snapshot)
+
+
+def _state_changes_summary(before: GuideState, after: GuideState) -> str:
+  before_snapshot = _state_log_snapshot(before)
+  after_snapshot = _state_log_snapshot(after)
+  changes = [
+    f"{key}:{before_snapshot[key]}->{after_snapshot[key]}"
+    for key in after_snapshot
+    if before_snapshot[key] != after_snapshot[key]
+  ]
+  if not changes:
+    return "none"
+  return ",".join(changes)
+
+
+def _state_log_snapshot(state: GuideState) -> dict[str, str | int | bool]:
   venue = state.get("venue")
   event_info = state.get("event_info")
   response = state.get("response")
-  return (
-    "input_type=%s venue=%s search_queries=%d search_results=%d "
-    "event_info=%s event_candidates=%d sources=%d fallback_used=%s llm_used=%s response_ready=%s"
-  ) % (
-    state.get("input_type", "pending"),
-    venue.name if venue else "none",
-    len(state.get("search_queries", [])),
-    len(state.get("search_results", [])),
-    bool(event_info),
-    len(state.get("event_candidates", [])),
-    len(state.get("sources", [])),
-    state.get("fallback_used", False),
-    state.get("llm_used", False),
-    bool(response),
-  )
+  return {
+    "intent": state.get("input_intent", "pending"),
+    "input_type": state.get("input_type", "pending"),
+    "venue": venue.name if venue else "none",
+    "search_queries": len(state.get("search_queries", [])),
+    "search_results": len(state.get("search_results", [])),
+    "event_info": "yes" if event_info else "no",
+    "event_candidates": len(state.get("event_candidates", [])),
+    "summary": len(state.get("summary", [])),
+    "checklist": len(state.get("checklist", [])),
+    "transit_tips": len(state.get("transit_and_entry_tips", [])),
+    "official_checks": len(state.get("official_check_required", [])),
+    "sources": len(state.get("sources", [])),
+    "fallback_used": state.get("fallback_used", False),
+    "llm_used": state.get("llm_used", False),
+    "response_ready": "yes" if response else "no",
+  }
